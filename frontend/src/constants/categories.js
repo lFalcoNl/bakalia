@@ -1,0 +1,18 @@
+export const categories = [
+  { name: 'Ваговий товар', image: '/images/categories/vahoviy.jpg' },
+  { name: 'Фасовані крупи', image: '/images/categories/krupy.jpg' },
+  { name: 'Макаронні вироби', image: '/images/categories/makarony.jpg' },
+  { name: 'Олія', image: '/images/categories/oil.jpg' },
+  { name: 'Молочні продукти', image: '/images/categories/dairy.jpg' },
+  { name: 'Консерви', image: '/images/categories/canned.jpg' },
+  { name: 'Приправи і спеції', image: '/images/categories/spices.jpg' },
+  { name: 'Майонез, кетчуп, соуси', image: '/images/categories/sauces.jpg' },
+  { name: 'Чай, кава, напої', image: '/images/categories/drinks.jpg' },
+  { name: 'Солодощі, печиво', image: '/images/categories/sweets.jpg' },
+  { name: 'Вода і соки', image: '/images/categories/water.jpg' },
+  { name: 'Корми, комбікорми', image: '/images/categories/feed.jpg' },
+  { name: 'Побутова хімія', image: '/images/categories/chemicals.jpg' },
+  { name: 'Господарські товари', image: '/images/categories/household.jpg' },
+  { name: 'Мінеральні добрива', image: '/images/categories/fertilizers.jpg' },
+  { name: 'Інші товари', image: '/images/categories/others.jpg' }
+];
