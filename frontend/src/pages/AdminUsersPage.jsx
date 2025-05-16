@@ -1,3 +1,4 @@
+// frontend/src/pages/AdminUsersPage.jsx
 import React, { useState, useEffect, useMemo } from 'react'
 import api from '../api/api'
 import { useNotification } from '../context/NotificationContext'
@@ -5,7 +6,7 @@ import dayjs from 'dayjs'
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([])
-  const [sortConfig, setSortConfig] = useState({ key: 'email', direction: 'ascending' })
+  const [sortConfig, setSortConfig] = useState({ key: 'user', direction: 'ascending' })
   const { addNotification } = useNotification()
 
   useEffect(() => {
@@ -28,9 +29,9 @@ export default function AdminUsersPage() {
     arr.sort((a, b) => {
       let aKey, bKey
       switch (sortConfig.key) {
-        case 'email':
-          aKey = a.email.toLowerCase()
-          bKey = b.email.toLowerCase()
+        case 'user':
+          aKey = `${a.surname} ${a.phone}`.toLowerCase()
+          bKey = `${b.surname} ${b.phone}`.toLowerCase()
           break
         case 'role':
           aKey = a.role
@@ -95,14 +96,13 @@ export default function AdminUsersPage() {
       <h1 className="text-2xl font-semibold mb-4">Управління користувачами</h1>
       <div className="overflow-x-auto">
         <table className="table-fixed w-full border-collapse md:border border-gray-200 bg-white">
-          {/* Заголовок тільки на десктопі */}
           <thead className="hidden md:table-header-group bg-gray-100">
             <tr>
               <th
                 className="cursor-pointer px-4 py-2 w-1/3 text-left"
-                onClick={() => requestSort('email')}
+                onClick={() => requestSort('user')}
               >
-                Email{getSortIndicator('email')}
+                Користувач{getSortIndicator('user')}
               </th>
               <th
                 className="cursor-pointer px-4 py-2 w-1/6 text-left"
@@ -133,10 +133,10 @@ export default function AdminUsersPage() {
                   key={u._id}
                   className="block md:table-row mb-4 md:mb-0 bg-white md:bg-transparent border md:border-0 md:border-t"
                 >
-                  {/* Email */}
+                  {/* Користувач */}
                   <td className="block md:table-cell px-4 py-2">
-                    <span className="font-semibold md:hidden">Email: </span>
-                    {u.email}
+                    <span className="font-semibold md:hidden">Користувач: </span>
+                    {u.surname}, {u.phone}
                   </td>
                   {/* Role */}
                   <td className="block md:table-cell px-4 py-2">

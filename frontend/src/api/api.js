@@ -2,8 +2,7 @@ import axios from 'axios'
 import { notify } from '../utils/notificationService'
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api'
-  // baseURL: 'https://bakalia-production.up.railway.app/api'
+  baseURL: __BACKEND_URL__
 })
 
 api.interceptors.request.use(config => {
