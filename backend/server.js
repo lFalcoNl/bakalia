@@ -5,7 +5,11 @@ const connectDB = require('./config/db')
 
 const app = express()
 
-app.use(cors())
+const cors = require('cors');
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://bakalia-production.up.railway.app'],
+  credentials: true,
+}));
 app.use(express.json({ limit: '20mb' }))
 app.use(express.urlencoded({ limit: '20mb', extended: true }))
 
