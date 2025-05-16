@@ -1,3 +1,4 @@
+// frontend/src/pages/LoginPage.jsx
 import React, { useState, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
@@ -16,15 +17,8 @@ export default function LoginPage() {
       await login(email, password)
       navigate('/')
     } catch (err) {
-      // Якщо сервер повернув статус 403 → акаунт не підтверджено
-      const status = err.response?.status
-      const serverMsg = err.response?.data?.message
-      if (status === 403) {
-        addNotification(serverMsg || 'Очікуйте підтвердження адміністратора.')
-      } else {
-        // інші помилки (400, 500 тощо)
-        addNotification(serverMsg || 'Невдала спроба входу.')
-      }
+      console.error('Login failed', err)
+      addNotification(err.response?.data?.msg || 'Помилка при вході')
     }
   }
 
@@ -53,7 +47,7 @@ export default function LoginPage() {
         />
         <button
           type="submit"
-          className="bg-green-600 text-white rounded w-full py-2 hover:bg-opacity-90"
+          className="bg-green-600 text-white rounded w-full py-2 hover:bg-green-700 transition"
         >
           Увійти
         </button>

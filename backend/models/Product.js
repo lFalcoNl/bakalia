@@ -6,8 +6,9 @@ const ProductSchema = new Schema({
   price: { type: Number, required: true },
   category: { type: String, required: true },
   code: { type: String, required: true, unique: true },
-  imageData: String,
-  imageType: String,
+  imageData: String,              // raw base64 or buffer
+  imageType: String,              // e.g. 'image/png'
+  minOrder: { type: Number, required: true, default: 1 },
   createdAt: { type: Date, default: Date.now }
 })
 

@@ -1,18 +1,28 @@
-// frontend/src/components/ProductCard.jsx
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import { AuthContext } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
+import { useNotification } from '../context/NotificationContext'
 
 export default function ProductCard({ product }) {
-  const [quantity, setQuantity] = useState(1)
+  const minOrder = product.minOrder || 1
+  const [quantity, setQuantity] = useState(minOrder)
   const [showModal, setShowModal] = useState(false)
   const { user } = useContext(AuthContext)
   const { addItem } = useCart()
+  const { addNotification } = useNotification()
   const imgSrc = product.image || '/images/placeholder.png'
+
+  useEffect(() => {
+    setQuantity(minOrder)
+  }, [minOrder])
 
   const handleAddToCart = () => {
     if (!user) {
-      // якщо користувач не залогінений, можна перенаправити на логін
+      addNotification('Будь ласка, увійдіть для оформлення замовлення')
+      return
+    }
+    if (quantity < minOrder) {
+      addNotification(`Мінімальна кількість — ${minOrder}`)
       return
     }
     addItem(product, quantity)
@@ -23,15 +33,24 @@ export default function ProductCard({ product }) {
   return (
     <>
       <div className="border rounded-lg p-4 flex flex-col">
-        <img src={imgSrc} alt={product.name} className="h-48 object-cover mb-4" />
+        <img
+          src={imgSrc}
+          alt={product.name}
+          className="h-48 object-cover mb-4"
+        />
         <h3 className="text-lg font-semibold">{product.name}</h3>
-        <p className="mt-2 text-green-600 font-bold">{product.price} ₴</p>
+        <p className="mt-2 text-green-600 font-bold">
+          {product.price} ₴
+        </p>
         <div className="mt-auto flex items-center space-x-2">
           <input
             type="number"
-            min="1"
+            min={minOrder}
             value={quantity}
-            onChange={e => setQuantity(Number(e.target.value))}
+            onChange={e => {
+              const val = Math.max(minOrder, Number(e.target.value) || minOrder)
+              setQuantity(val)
+            }}
             className="w-16 border p-1 rounded text-sm"
           />
           <button

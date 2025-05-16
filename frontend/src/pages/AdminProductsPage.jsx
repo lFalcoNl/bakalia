@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react'
+// frontend/src/pages/AdminProductsPage.jsx
+import React, { useState, useEffect } from 'react'
 import api from '../api/api'
 import { useNotification } from '../context/NotificationContext'
+import dayjs from 'dayjs'
 import { categories } from '../constants/categories'
 
 export default function AdminProductsPage() {
@@ -10,94 +12,41 @@ export default function AdminProductsPage() {
     price: '',
     category: categories[0].name,
     code: '',
+    minOrder: 1,
   })
   const [file, setFile] = useState(null)
   const { addNotification } = useNotification()
 
-  // сортування
-  const [sortConfig, setSortConfig] = useState({
-    key: 'name',
-    direction: 'ascending',
-  })
-  const requestSort = key => {
-    setSortConfig(prev =>
-      prev.key === key
-        ? {
-          key,
-          direction:
-            prev.direction === 'ascending' ? 'descending' : 'ascending',
-        }
-        : { key, direction: 'ascending' }
-    )
-  }
-  const getSortIndicator = key =>
-    sortConfig.key === key
-      ? sortConfig.direction === 'ascending'
-        ? ' ▲'
-        : ' ▼'
-      : ''
-
-  // завантажуємо товари
   useEffect(() => {
-    api
-      .get('/products')
+    api.get('/products')
       .then(r => setProducts(r.data))
-      .catch(err => {
-        console.error(err)
-        addNotification('Помилка завантаження товарів')
-      })
+      .catch(() => addNotification('Помилка завантаження товарів'))
   }, [])
 
-  // відсортований список
-  const sortedProducts = useMemo(() => {
-    const arr = [...products]
-    arr.sort((a, b) => {
-      let aKey = a[sortConfig.key]
-      let bKey = b[sortConfig.key]
-      // якщо сортуємо по price — числове порівняння
-      if (sortConfig.key === 'price') {
-        aKey = Number(aKey)
-        bKey = Number(bKey)
-      } else {
-        aKey = aKey.toString().toLowerCase()
-        bKey = bKey.toString().toLowerCase()
-      }
-      if (aKey < bKey) return sortConfig.direction === 'ascending' ? -1 : 1
-      if (aKey > bKey) return sortConfig.direction === 'ascending' ? 1 : -1
-      return 0
-    })
-    return arr
-  }, [products, sortConfig])
-
   const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
   }
-  const handleFile = e => {
-    setFile(e.target.files[0])
-  }
+  const handleFile = e => setFile(e.target.files[0])
 
   const handleSubmit = async e => {
     e.preventDefault()
-    const data = new FormData()
-    data.append('name', form.name)
-    data.append('price', form.price)
-    data.append('category', form.category)
-    data.append('code', form.code)
-    if (file) data.append('image', file)
-
     try {
-      const { data: prod } = await api.post('/products', data)
-      setProducts(prev => [prod, ...prev])
+      const data = new FormData()
+      Object.entries(form).forEach(([k, v]) => data.append(k, v))
+      if (file) data.append('image', file)
+      const { data: newProd } = await api.post('/products', data)
+      setProducts([newProd, ...products])
       setForm({
         name: '',
         price: '',
         category: categories[0].name,
         code: '',
+        minOrder: 1,
       })
       setFile(null)
       addNotification('Товар додано')
-    } catch (err) {
-      console.error(err)
+    } catch {
       addNotification('Помилка при додаванні')
     }
   }
@@ -106,7 +55,7 @@ export default function AdminProductsPage() {
     if (!window.confirm('Видалити товар?')) return
     try {
       await api.delete(`/products/${id}`)
-      setProducts(prev => prev.filter(p => p._id !== id))
+      setProducts(products.filter(p => p._id !== id))
       addNotification('Товар видалено')
     } catch {
       addNotification('Не вдалося видалити товар')
@@ -115,19 +64,19 @@ export default function AdminProductsPage() {
 
   return (
     <div className="p-4 flex flex-col min-h-screen">
-      <h1 className="text-2xl font-semibold mb-4">Управління товарами</h1>
+      <h1 className="text-2xl font-bold mb-4">Управління товарами</h1>
 
       {/* Форма додавання */}
       <form
         onSubmit={handleSubmit}
-        className="mb-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
       >
         <input
           name="name"
           value={form.name}
           onChange={handleChange}
           placeholder="Назва"
-          className="border p-2 rounded text-sm w-full"
+          className="border p-2 rounded"
           required
         />
         <input
@@ -136,14 +85,14 @@ export default function AdminProductsPage() {
           value={form.price}
           onChange={handleChange}
           placeholder="Ціна"
-          className="border p-2 rounded text-sm w-full"
+          className="border p-2 rounded"
           required
         />
         <select
           name="category"
           value={form.category}
           onChange={handleChange}
-          className="border p-2 rounded text-sm w-full"
+          className="border p-2 rounded"
         >
           {categories.map(c => (
             <option key={c.name} value={c.name}>
@@ -156,74 +105,71 @@ export default function AdminProductsPage() {
           value={form.code}
           onChange={handleChange}
           placeholder="Код"
-          className="border p-2 rounded text-sm w-full"
+          className="border p-2 rounded"
+          required
+        />
+        <input
+          name="minOrder"
+          type="number"
+          min="1"
+          value={form.minOrder}
+          onChange={handleChange}
+          placeholder="Мін. кількість"
+          className="border p-2 rounded"
           required
         />
         <input
           type="file"
           onChange={handleFile}
-          className="border p-2 rounded text-sm w-full"
+          className="border p-2 rounded"
         />
         <button
           type="submit"
-          className="sm:col-span-2 md:col-span-3 bg-green-600 text-white rounded py-2 text-sm hover:bg-green-700"
+          className="col-span-full bg-green-600 text-white p-2 rounded hover:bg-green-700 transition"
         >
           Додати товар
         </button>
       </form>
 
-      {/* Таблиця / картки */}
-      <div className="overflow-x-auto">
-        <table className="table-fixed w-full border border-gray-200 bg-white text-sm md:table">
-          <thead className="hidden md:table-header-group bg-gray-100">
+      {/* Таблиця товарів */}
+      <div className="overflow-auto">
+        <table className="min-w-full bg-white text-sm">
+          <thead className="bg-gray-100">
             <tr>
-              <th
-                className="cursor-pointer px-4 py-2 w-2/5 text-left"
-                onClick={() => requestSort('name')}
-              >
-                Назва{getSortIndicator('name')}
-              </th>
-              <th
-                className="cursor-pointer px-4 py-2 w-2/5 text-left"
-                onClick={() => requestSort('category')}
-              >
-                Категорія{getSortIndicator('category')}
-              </th>
-              <th
-                className="cursor-pointer px-4 py-2 w-1/5 text-right"
-                onClick={() => requestSort('price')}
-              >
-                Ціна{getSortIndicator('price')}
-              </th>
-              <th className="px-4 py-2 w-1/5 text-center">Дія</th>
+              <th className="p-2">Фото</th>
+              <th className="p-2">ID</th>
+              <th className="p-2">Назва</th>
+              <th className="p-2">Код</th>
+              <th className="p-2">Категорія</th>
+              <th className="p-2">Ціна</th>
+              <th className="p-2">MinOrder</th>
+              <th className="p-2">Створено</th>
+              <th className="p-2">Дія</th>
             </tr>
           </thead>
-          <tbody className="block md:table-row-group">
-            {sortedProducts.map(p => (
-              <tr
-                key={p._id}
-                className="block md:table-row mb-4 md:mb-0 bg-white md:bg-transparent border md:border-0 md:border-t"
-              >
-                {/* Назва */}
-                <td className="block md:table-cell px-4 py-2 whitespace-nowrap">
-                  <span className="font-semibold md:hidden">Назва: </span>
-                  {p.name}
+          <tbody>
+            {products.map(p => (
+              <tr key={p._id} className="border-t hover:bg-gray-50">
+                <td className="p-2">
+                  <img
+                    src={p.image || '/images/placeholder.png'}
+                    alt={p.name}
+                    className="h-8 w-8 object-cover rounded"
+                  />
                 </td>
-                {/* Категорія */}
-                <td className="block md:table-cell px-4 py-2 whitespace-nowrap">
-                  <span className="font-semibold md:hidden">Категорія: </span>
-                  {p.category}
+                <td className="p-2 break-all">{p._id}</td>
+                <td className="p-2">{p.name}</td>
+                <td className="p-2">{p.code}</td>
+                <td className="p-2">{p.category}</td>
+                <td className="p-2 text-right">{p.price} ₴</td>
+                <td className="p-2 text-center">{p.minOrder}</td>
+                <td className="p-2">
+                  {dayjs(p.createdAt).format('DD.MM.YYYY')}
                 </td>
-                {/* Ціна */}
-                <td className="block md:table-cell px-4 py-2 text-right">
-                  <span className="font-semibold md:hidden">Ціна: </span>
-                  {p.price} ₴
-                </td>
-                {/* Дія */}
-                <td className="block md:table-cell px-4 py-2 text-center space-x-2">
+                <td className="p-2 text-center">
                   <button
                     onClick={() => deleteProduct(p._id)}
-                    className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"
+                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition"
                   >
                     Видалити
                   </button>
