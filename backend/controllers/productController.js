@@ -1,113 +1,107 @@
-// backend/controllers/productController.js
-const Product = require('../models/Product')
-const Order = require('../models/Order')
+const Product = require('../models/Product');
+const Order = require('../models/Order');
 
-// Приводимо imageData + imageType до data URL
+// Збираємо imageData + imageType в data URL
 function toDataUrl({ imageData, imageType }) {
-  if (!imageData || !imageType) return null
-  // imageData уже збережене як base64-рядок
-  return `data:${imageType};base64,${imageData}`
+  if (!imageData || !imageType) return null;
+  return `data:${imageType};base64,${imageData}`;
 }
 
 exports.getAll = async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 })
+    const products = await Product.find().sort({ createdAt: -1 });
     const result = products.map(p => ({
       _id: p._id,
       name: p.name,
       price: p.price,
       category: p.category,
-      code: p.code,
       minOrder: p.minOrder,
       createdAt: p.createdAt,
-      image: toDataUrl(p),
-    }))
-    res.json(result)
+      image: toDataUrl(p)
+      // code прибрано
+    }));
+    res.json(result);
   } catch (err) {
-    console.error('productController.getAll error:', err)
-    res.status(500).json({ msg: 'Помилка отримання товарів' })
+    console.error('productController.getAll error:', err);
+    res.status(500).json({ msg: 'Помилка отримання товарів' });
   }
-}
+};
 
 exports.create = async (req, res) => {
   try {
-    const { name, price, category, code, minOrder } = req.body
+    const { name, price, category, minOrder } = req.body;
     const data = {
       name,
       price: Number(price),
       category,
-      code,
       minOrder: Number(minOrder),
-    }
+    };
     if (req.file) {
-      data.imageData = req.file.buffer.toString('base64')
-      data.imageType = req.file.mimetype
+      data.imageData = req.file.buffer.toString('base64');
+      data.imageType = req.file.mimetype;
     }
-    const prod = await new Product(data).save()
+    const prod = await new Product(data).save();
     const out = {
       _id: prod._id,
       name: prod.name,
       price: prod.price,
       category: prod.category,
-      code: prod.code,
       minOrder: prod.minOrder,
       createdAt: prod.createdAt,
-      image: toDataUrl(prod),
-    }
-    res.status(201).json(out)
+      image: toDataUrl(prod)
+      // code прибрано
+    };
+    res.status(201).json(out);
   } catch (err) {
-    console.error('productController.create error:', err)
-    res.status(500).json({ msg: 'Помилка створення товару' })
+    console.error('productController.create error:', err);
+    res.status(500).json({ msg: 'Помилка створення товару' });
   }
-}
+};
 
 exports.update = async (req, res) => {
   try {
-    const { name, price, category, code, minOrder } = req.body
+    const { name, price, category, minOrder } = req.body;
     const data = {
       name,
       price: Number(price),
       category,
-      code,
       minOrder: Number(minOrder),
-    }
+    };
     if (req.file) {
-      data.imageData = req.file.buffer.toString('base64')
-      data.imageType = req.file.mimetype
+      data.imageData = req.file.buffer.toString('base64');
+      data.imageType = req.file.mimetype;
     }
-    const prod = await Product.findByIdAndUpdate(req.params.id, data, {
-      new: true,
-    })
-    if (!prod) return res.status(404).json({ msg: 'Товар не знайдено' })
+    const prod = await Product.findByIdAndUpdate(req.params.id, data, { new: true });
+    if (!prod) return res.status(404).json({ msg: 'Товар не знайдено' });
 
     const out = {
       _id: prod._id,
       name: prod.name,
       price: prod.price,
       category: prod.category,
-      code: prod.code,
       minOrder: prod.minOrder,
       createdAt: prod.createdAt,
-      image: toDataUrl(prod),
-    }
-    res.json(out)
+      image: toDataUrl(prod)
+      // code прибрано
+    };
+    res.json(out);
   } catch (err) {
-    console.error('productController.update error:', err)
-    res.status(500).json({ msg: 'Помилка оновлення товару' })
+    console.error('productController.update error:', err);
+    res.status(500).json({ msg: 'Помилка оновлення товару' });
   }
-}
+};
 
 exports.remove = async (req, res) => {
   try {
-    const { id } = req.params
-    const prod = await Product.findById(id)
-    if (!prod) return res.status(404).json({ msg: 'Товар не знайдено' })
-    // Видаляємо всі замовлення, що містять цей товар
-    await Order.deleteMany({ 'products.productId': id })
-    await Product.findByIdAndDelete(id)
-    res.json({ msg: 'Товар видалено' })
+    const { id } = req.params;
+    const prod = await Product.findById(id);
+    if (!prod) return res.status(404).json({ msg: 'Товар не знайдено' });
+    // Видаляємо всі замовлення з цим товаром
+    await Order.deleteMany({ 'products.productId': id });
+    await Product.findByIdAndDelete(id);
+    res.json({ msg: 'Товар видалено' });
   } catch (err) {
-    console.error('productController.remove error:', err)
-    res.status(500).json({ msg: 'Помилка видалення товару' })
+    console.error('productController.remove error:', err);
+    res.status(500).json({ msg: 'Помилка видалення товару' });
   }
-}
+};

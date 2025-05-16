@@ -5,7 +5,6 @@ const ProductSchema = new Schema({
   name: { type: String, required: true },
   price: { type: Number, required: true },
   category: { type: String, required: true },
-  code: { type: String, required: true, unique: true },
   imageData: String,              // raw base64 or buffer
   imageType: String,              // e.g. 'image/png'
   minOrder: { type: Number, required: true, default: 1 },

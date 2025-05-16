@@ -1,10 +1,10 @@
-// frontend/src/App.jsx
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import NavBar from './components/NavBar'
 import Footer from './components/Footer'
 import PrivateRoute from './components/PrivateRoute'
 import HomePage from './pages/HomePage'
+import CategoryPage from './pages/CategoryPage'
 import ProductPage from './pages/ProductPage'
 import CartPage from './pages/CartPage'
 import LoginPage from './pages/LoginPage'
@@ -18,25 +18,21 @@ export default function App() {
     <div className="flex flex-col min-h-screen bg-gray-50">
       <NavBar />
 
-      <main
-        className="
-          flex-grow
-          w-full max-w-[1300px]
-          mx-auto px-4 py-6
-          bg-white rounded-lg
-          shadow-sm
-        "
-      >
+      <main className="flex-grow w-full max-w-[1300px] mx-auto px-4 py-6 bg-white rounded-lg shadow-sm">
         <Routes>
+          {/* Публічні */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/category/:category" element={<CategoryPage />} />
           <Route path="/product/:id" element={<ProductPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+
+          {/* Адмінські */}
           <Route
             path="/admin/products"
             element={
-              <PrivateRoute>
+              <PrivateRoute adminOnly>
                 <AdminProductsPage />
               </PrivateRoute>
             }
@@ -44,7 +40,7 @@ export default function App() {
           <Route
             path="/admin/orders"
             element={
-              <PrivateRoute>
+              <PrivateRoute adminOnly>
                 <AdminOrdersPage />
               </PrivateRoute>
             }
@@ -52,7 +48,7 @@ export default function App() {
           <Route
             path="/admin/users"
             element={
-              <PrivateRoute>
+              <PrivateRoute adminOnly>
                 <AdminUsersPage />
               </PrivateRoute>
             }

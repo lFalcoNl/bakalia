@@ -1,25 +1,27 @@
-import React, { useState } from 'react'
-import api from '../api/api'
+import React, { useState, useContext } from 'react'
 import { useNotification } from '../context/NotificationContext'
+import { AuthContext } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
 export default function RegisterPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const { register } = useContext(AuthContext)
   const { addNotification } = useNotification()
   const navigate = useNavigate()
+
+  const [surname, setSurname] = useState('')
+  const [street, setStreet] = useState('')
+  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
 
   const handleSubmit = async e => {
     e.preventDefault()
     try {
-      await api.post('/auth/register', { email, password })
-      addNotification('Зареєстровано успішно')
+      const { data } = await register(surname, street, phone, password)
+      addNotification(data.message || 'Зареєстровано успішно')
       navigate('/login')
     } catch (err) {
-      // Викликаємо повідомлення лише тут, інтерцептор по цій точці не спрацьовуватиме
-      const message =
-        err.response?.data?.message || err.response?.data?.msg || 'Помилка при реєстрації'
-      addNotification(message)
+      const msg = err.response?.data?.message || 'Помилка при реєстрації'
+      addNotification(msg)
     }
   }
 
@@ -31,10 +33,26 @@ export default function RegisterPage() {
       >
         <h1 className="text-xl font-bold text-center">Реєстрація</h1>
         <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
+          type="text"
+          placeholder="Прізвище"
+          value={surname}
+          onChange={e => setSurname(e.target.value)}
+          className="border p-2 rounded w-full"
+          required
+        />
+        <input
+          type="text"
+          placeholder="Вулиця"
+          value={street}
+          onChange={e => setStreet(e.target.value)}
+          className="border p-2 rounded w-full"
+          required
+        />
+        <input
+          type="tel"
+          placeholder="Номер телефону"
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
           className="border p-2 rounded w-full"
           required
         />

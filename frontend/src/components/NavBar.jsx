@@ -19,6 +19,8 @@ export default function NavBar() {
     setPrevCount(cart.length)
   }, [cart.length, prevCount])
 
+  const closeMenu = () => setOpen(false)
+
   const linkClass = ({ isActive }) =>
     `px-3 py-2 rounded hover:bg-secondary/20 transition ${isActive ? 'bg-secondary/30' : ''
     }`
@@ -26,7 +28,7 @@ export default function NavBar() {
   return (
     <header className="sticky top-0 z-50 bg-primary text-secondary shadow-md">
       <div className="w-full max-w-[1300px] mx-auto px-4 flex items-center justify-between py-3">
-        <NavLink to="/" className="flex items-center space-x-2">
+        <NavLink to="/" onClick={closeMenu} className="flex items-center space-x-2">
           <img
             src="/images/logo/noSignLogo.png"
             alt="Logo"
@@ -57,12 +59,13 @@ export default function NavBar() {
           `}
         >
           <div className="flex flex-col md:flex-row md:items-center md:space-x-4 px-4 py-4 md:p-0">
-            <NavLink to="/" className={linkClass}>
+            <NavLink to="/" onClick={closeMenu} className={linkClass}>
               Головна
             </NavLink>
 
             <NavLink
               to="/cart"
+              onClick={closeMenu}
               className={({ isActive }) =>
                 `${linkClass({ isActive })} flex items-center space-x-1 ${shake ? 'animate-bounce' : ''
                 }`
@@ -79,13 +82,13 @@ export default function NavBar() {
 
             {user?.role === 'admin' && (
               <>
-                <NavLink to="/admin/products" className={linkClass}>
+                <NavLink to="/admin/products" onClick={closeMenu} className={linkClass}>
                   Товари
                 </NavLink>
-                <NavLink to="/admin/orders" className={linkClass}>
+                <NavLink to="/admin/orders" onClick={closeMenu} className={linkClass}>
                   Замовлення
                 </NavLink>
-                <NavLink to="/admin/users" className={linkClass}>
+                <NavLink to="/admin/users" onClick={closeMenu} className={linkClass}>
                   Користувачі
                 </NavLink>
               </>
@@ -93,17 +96,17 @@ export default function NavBar() {
 
             {user ? (
               <button
-                onClick={logout}
+                onClick={() => { logout(); closeMenu() }}
                 className="px-3 py-2 rounded hover:bg-secondary/20 transition text-left"
               >
                 Вийти
               </button>
             ) : (
               <>
-                <NavLink to="/login" className={linkClass}>
+                <NavLink to="/login" onClick={closeMenu} className={linkClass}>
                   Вхід
                 </NavLink>
-                <NavLink to="/register" className={linkClass}>
+                <NavLink to="/register" onClick={closeMenu} className={linkClass}>
                   Реєстрація
                 </NavLink>
               </>

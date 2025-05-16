@@ -1,4 +1,3 @@
-// backend/server.js
 require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
@@ -6,33 +5,38 @@ const connectDB = require('./config/db')
 
 const app = express()
 
-// Build a CORS options object
-const corsOptions = {
-  origin: process.env.FRONTEND_URL,  // now defined
+const allowed = [
+  process.env.FRONTEND_URL,           
+  'http://localhost:5173'
+]
+
+app.use(cors({
+  origin(origin, callback) {
+    // allow requests with no origin (e.g. mobile apps, curl)
+    if (!origin) return callback(null, true)
+    if (allowed.includes(origin)) {
+      return callback(null, true)
+    }
+    callback(new Error(`Origin ${origin} not allowed`))
+  },
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-}
-
-// Enable CORS on all routes and for preflight requests
-app.use(cors(corsOptions))
-app.options('*', cors(corsOptions))
+  credentials: true
+}))
+app.options('*', cors())
 
 app.use(express.json({ limit: '20mb' }))
 app.use(express.urlencoded({ limit: '20mb', extended: true }))
 
 connectDB()
 
-// Health check
 app.get('/api', (_req, res) => res.send('API listening'))
 
-// Your routes
 app.use('/api/auth', require('./routes/auth'))
 app.use('/api/products', require('./routes/products'))
 app.use('/api/orders', require('./routes/orders'))
 app.use('/api/users', require('./routes/users'))
 
-// Error handler...
 app.use((err, req, res, next) => {
   if (err.code === 11000) {
     const field = Object.keys(err.keyPattern)[0]

@@ -9,9 +9,9 @@ export default function Footer() {
           <img src="/images/logo/mainLogo.png" alt="Logo" className="fade-in fade-in h-20 m-3 rounded-md" />
         </Link>
         <div className="fade-in fade-in text-center md:text-left space-y-1">
-          <p>Адреса: вул. Невідома, 123, Жовква, Україна</p>
-          <p>Телефон: +380123456789</p>
-          <p>Email: info@bakaliynyi-dvir.com</p>
+          <p>Адреса: вул. Бічна Промислова 23А, м.Шептицький</p>
+          <p>Телефон: +380986150065</p>
+          <p>Email: bakaliyniydvir@gmail.com</p>
         </div>
       </div>
     </footer>

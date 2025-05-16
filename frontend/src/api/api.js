@@ -2,8 +2,8 @@ import axios from 'axios'
 import { notify } from '../utils/notificationService'
 
 const api = axios.create({
-  // baseURL: 'http://localhost:5000/api'
-  baseURL: 'https://bakalia-production.up.railway.app/api'
+  baseURL: 'http://localhost:5000/api'
+  // baseURL: 'https://bakalia-production.up.railway.app/api'
 })
 
 api.interceptors.request.use(config => {
@@ -11,14 +11,19 @@ api.interceptors.request.use(config => {
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`
   }
-  console.log('→ API Request:', config.method.toUpperCase(), config.url, config.headers.Authorization)
+  console.log(
+    '→ API Request:',
+    config.method.toUpperCase(),
+    config.url,
+    config.headers.Authorization
+  )
   return config
 })
 
 api.interceptors.response.use(
   response => response,
   error => {
-    const msg = error.response?.data?.msg || error.message
+    const msg = error.response?.data?.message || error.response?.data?.msg || error.message
     notify(msg)
     return Promise.reject(error)
   }
