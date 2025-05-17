@@ -69,7 +69,9 @@ export default function AdminUsersPage() {
   }
 
   const getSortIndicator = key =>
-    sortConfig.key === key ? (sortConfig.direction === 'ascending' ? ' ▲' : ' ▼') : ''
+    sortConfig.key === key
+      ? (sortConfig.direction === 'ascending' ? ' ▲' : ' ▼')
+      : ''
 
   const approveUser = async id => {
     try {
@@ -111,34 +113,39 @@ export default function AdminUsersPage() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-            <table className="table-fixed w-full border-collapse md:border border-gray-200 bg-white min-w-full text-sm">
-              <thead className="bg-gray-100 text-gray-700">
+          <table className="table-fixed w-full border-collapse md:border border-gray-200 bg-white text-sm">
+            {/* Сховати заголовки на мобільних */}
+            <thead className="hidden md:table-header-group bg-gray-100 text-gray-700">
               <tr>
                 <th
-                  className="cursor-pointer px-4 py-2 w-1/3 text-left"
+                  className="px-4 py-2 w-1/3 text-left cursor-pointer"
                   onClick={() => requestSort('user')}
                 >
-                  Користувач{getSortIndicator('user')}
+                  Користувач
+                  <span className="inline-block ml-1">{getSortIndicator('user')}</span>
                 </th>
                 <th
-                  className="cursor-pointer px-4 py-2 w-1/6 text-left"
+                  className="px-4 py-2 w-1/6 text-left cursor-pointer"
                   onClick={() => requestSort('role')}
                 >
-                  Роль{getSortIndicator('role')}
+                  Роль
+                  <span className="inline-block ml-1">{getSortIndicator('role')}</span>
                 </th>
                 <th
-                  className="cursor-pointer px-4 py-2 w-1/6 text-center"
+                  className="px-4 py-2 w-1/6 text-center cursor-pointer"
                   onClick={() => requestSort('isApproved')}
                 >
-                  Підтв.{getSortIndicator('isApproved')}
+                  Підтв.
+                  <span className="inline-block ml-1">{getSortIndicator('isApproved')}</span>
                 </th>
                 <th
-                  className="cursor-pointer px-4 py-2 w-1/6 text-center"
+                  className="px-4 py-2 w-1/6 text-center cursor-pointer"
                   onClick={() => requestSort('days')}
                 >
-                  Дн. дост.{getSortIndicator('days')}
+                  Дн. дост.
+                  <span className="inline-block ml-1">{getSortIndicator('days')}</span>
                 </th>
-                <th className="px-4 py-2 w-1/6">Дія</th>
+                <th className="px-4 py-2 w-1/6 text-center">Дія</th>
               </tr>
             </thead>
             <tbody>
