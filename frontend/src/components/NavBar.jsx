@@ -37,15 +37,24 @@ export default function NavBar() {
           <span className="text-2xl md:text-lg font-bold">Бакалійний Двір</span>
         </NavLink>
 
+        {/* mobile menu button */}
         <button
-          onClick={() => setOpen(!open)}
-          className="md:hidden focus:outline-none"
+          onClick={() => setOpen(o => !o)}
+          className="md:hidden relative focus:outline-none"
         >
+          {/* червоний дот, якщо є товари */}
+          {cart.length > 0 && !open && (
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+              {cart.length}
+            </span>
+          )}
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {open ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12" />
             ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                d="M4 8h16M4 16h16" />
             )}
           </svg>
         </button>
@@ -59,48 +68,50 @@ export default function NavBar() {
           `}
         >
           <div className="flex flex-col md:flex-row md:items-center md:space-x-4 px-4 py-4 md:p-0">
-            <NavLink to="/" onClick={closeMenu} className={linkClass}>
-              Головна
-            </NavLink>
-
-            <NavLink
-              to="/cart"
-              onClick={closeMenu}
-              className={({ isActive }) =>
-                `${linkClass({ isActive })} flex items-center space-x-1 ${shake ? 'animate-bounce' : ''
-                }`
-              }
-            >
-              <span>Корзина</span>
-              <span>🛒</span>
-              {cart.length > 0 && (
-                <span className="bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                  {cart.length}
-                </span>
-              )}
-            </NavLink>
-
-            {user?.role === 'admin' && (
-              <>
-                <NavLink to="/admin/products" onClick={closeMenu} className={linkClass}>
-                  Товари
-                </NavLink>
-                <NavLink to="/admin/orders" onClick={closeMenu} className={linkClass}>
-                  Замовлення
-                </NavLink>
-                <NavLink to="/admin/users" onClick={closeMenu} className={linkClass}>
-                  Користувачі
-                </NavLink>
-              </>
-            )}
-
             {user ? (
-              <button
-                onClick={() => { logout(); closeMenu() }}
-                className="px-3 py-2 rounded hover:bg-secondary/20 transition text-left"
-              >
-                Вийти
-              </button>
+              <>
+                <NavLink to="/" onClick={closeMenu} className={linkClass}>
+                  Головна
+                </NavLink>
+
+                <NavLink
+                  to="/cart"
+                  onClick={closeMenu}
+                  className={({ isActive }) =>
+                    `${linkClass({ isActive })} flex items-center space-x-1 ${shake ? 'animate-bounce' : ''
+                    }`
+                  }
+                >
+                  <span>Корзина</span>
+                  <span>🛒</span>
+                  {cart.length > 0 && (
+                    <span className="bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                      {cart.length}
+                    </span>
+                  )}
+                </NavLink>
+
+                {user.role === 'admin' && (
+                  <>
+                    <NavLink to="/admin/products" onClick={closeMenu} className={linkClass}>
+                      Товари
+                    </NavLink>
+                    <NavLink to="/admin/orders" onClick={closeMenu} className={linkClass}>
+                      Замовлення
+                    </NavLink>
+                    <NavLink to="/admin/users" onClick={closeMenu} className={linkClass}>
+                      Користувачі
+                    </NavLink>
+                  </>
+                )}
+
+                <button
+                  onClick={() => { logout(); closeMenu() }}
+                  className="px-3 py-2 rounded hover:bg-secondary/20 transition text-left"
+                >
+                  Вийти
+                </button>
+              </>
             ) : (
               <>
                 <NavLink to="/login" onClick={closeMenu} className={linkClass}>

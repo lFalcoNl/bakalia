@@ -1,5 +1,6 @@
 // frontend/src/pages/CartPage.jsx
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useContext, useState, useEffect, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { useCart } from '../context/CartContext'
 import { AuthContext } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
@@ -8,62 +9,99 @@ import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 
 export default function CartPage() {
-  const { cart, updateItem, removeItem, clearCart, totalPrice } = useCart()
+  const { cart, updateItem, removeItem: removeCartItem, clearCart, totalPrice } = useCart()
   const { user } = useContext(AuthContext)
   const { addNotification } = useNotification()
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(false)
-  const [myOrder, setMyOrder] = useState(null)
-  const [orderLoading, setOrderLoading] = useState(true)
+  const [orders, setOrders] = useState([])
+  const [ordersLoading, setOrdersLoading] = useState(true)
+  const [cartLoading, setCartLoading] = useState(true)
 
-  // Маппінг статусів на українські лейбли
+  // округлення до одного знаку
+  const round1 = n => Math.round(n * 10) / 10
+
   const statusLabels = {
-    new: 'Новe',
+    new: 'Нове',
     processing: 'В обробці',
     done: 'Виконано'
   }
 
-  // Завантажуємо попереднє замовлення
-  useEffect(() => {
-    if (!user) {
-      setOrderLoading(false)
-      return
-    }
-    api.get('/orders/my')
-      .then(({ data }) => setMyOrder(data))
-      .catch(() => addNotification('Не вдалося завантажити ваше замовлення'))
-      .finally(() => setOrderLoading(false))
-  }, [user])
+  const listVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }
+  const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }
 
+  // Завантажуємо історію замовлень
+  const fetchOrders = useCallback(async () => {
+    setOrdersLoading(true)
+    try {
+      const resp = await api.get('/orders/my')
+      const data = resp.data
+      const sorted = Array.isArray(data)
+        ? data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        : []
+      setOrders(sorted)
+    } catch (err) {
+      if (err.response?.status === 404) {
+        // fallback
+        try {
+          const { data: all } = await api.get('/orders')
+          const list = Array.isArray(all) ? all : all.orders ? all.orders : [all]
+          const mine = list
+            .filter(o => o.user?._id === user._id || o.userId === user._id)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          setOrders(mine)
+        } catch {
+          addNotification('Не вдалося завантажити історію замовлень')
+        }
+      } else {
+        addNotification('Не вдалося завантажити історію замовлень')
+      }
+    } finally {
+      setOrdersLoading(false)
+    }
+  }, [addNotification, user])
+
+  useEffect(() => {
+    fetchOrders()
+  }, [fetchOrders])
+
+  // імітуємо завантаження кошика
+  useEffect(() => {
+    setCartLoading(false)
+  }, [])
+
+  // Підтвердження замовлення
   const handleConfirm = async () => {
     if (!user) {
-      addNotification('Будь ласка, увійдіть для оформлення')
-      navigate('/login')
+      addNotification('Будь ласка, зареєструйтесь для оформлення')
+      navigate('/register', { replace: true })
       return
     }
-    if (cart.length === 0) {
+    if (!cart.length) {
       addNotification('Ваш кошик порожній')
       return
     }
-    for (let { product, quantity } of cart) {
+    for (const { product, quantity } of cart) {
       const min = product.minOrder || 1
       if (quantity < min) {
         addNotification(`Мінімальна кількість для "${product.name}" — ${min}`)
         return
       }
     }
+
     setLoading(true)
     try {
-      const { data: newOrder } = await api.post('/orders', {
-        products: cart.map(item => ({
-          productId: item.product._id,
-          quantity: item.quantity
+      await api.post('/orders', {
+        products: cart.map(({ product, quantity }) => ({
+          productId: product._id,
+          quantity,
+          price: round1(product.price)
         }))
       })
       addNotification('Замовлення успішно створено')
-      setMyOrder(newOrder)
       clearCart()
+      await fetchOrders()
     } catch {
       addNotification('Не вдалося оформити замовлення')
     } finally {
@@ -71,12 +109,12 @@ export default function CartPage() {
     }
   }
 
+  // Зміна кількості в кошику
   const changeQty = (product, delta) => {
-    const min = product.minOrder || 1
     const current = cart.find(i => i.product._id === product._id).quantity
     const next = current + delta
-    if (next < min) {
-      addNotification(`Мінімальна кількість — ${min}`)
+    if (next < (product.minOrder || 1)) {
+      addNotification(`Мінімальна кількість — ${product.minOrder || 1}`)
       return
     }
     updateItem(product._id, next)
@@ -86,11 +124,31 @@ export default function CartPage() {
     if (window.confirm('Очистити кошик?')) clearCart()
   }
 
+  // Підрахунок підсумку замовлення
+  const computeOrderTotal = order =>
+    round1(
+      order.products.reduce((sum, p) => {
+        // беремо ціну з поля price, або, якщо його нема, з populated productId
+        const unit = p.price ?? p.productId?.price ?? 0
+        return sum + unit * p.quantity
+      }, 0)
+    )
+
   return (
     <div className="w-full max-w-[1300px] mx-auto px-4 py-6">
       <h1 className="text-2xl font-semibold mb-6">Ваш кошик</h1>
 
-      {cart.length === 0 ? (
+      {/* Кошик */}
+      {cartLoading ? (
+        <div className="text-center py-20 text-gray-500">
+          <motion.div
+            className="w-12 h-12 border-4 border-gray-200 border-t-green-500 rounded-full mx-auto"
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+          />
+          <p className="mt-4">Завантаження товарів…</p>
+        </div>
+      ) : !cart.length ? (
         <div className="flex flex-col items-center py-20 text-gray-500">
           <span className="text-6xl mb-4">🛒</span>
           <p className="text-lg">Кошик порожній</p>
@@ -98,20 +156,31 @@ export default function CartPage() {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden md:block">
-            <table className="w-full table-fixed bg-white shadow-sm rounded overflow-hidden">
-              <thead className="bg-gray-100">
-                <tr className="text-left text-sm text-gray-600">
-                  <th className="p-3 w-1/5">Товар</th>
-                  <th className="p-3 w-1/6">Ціна</th>
-                  <th className="p-3 w-1/6">К-ть</th>
-                  <th className="p-3 w-1/6">Сума</th>
-                  <th className="p-3 w-1/6">Дія</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cart.map(({ product, quantity }) => (
-                  <tr key={product._id} className="border-b hover:bg-gray-50">
+          <motion.table
+            className="hidden md:table w-full table-fixed bg-white shadow-sm rounded overflow-hidden"
+            initial="hidden"
+            animate="visible"
+            variants={listVariants}
+          >
+            <thead className="bg-gray-100 text-gray-600 text-sm">
+              <tr>
+                <th className="p-3 w-1/5 text-left">Товар</th>
+                <th className="p-3 w-1/6 text-left">Ціна</th>
+                <th className="p-3 w-1/6 text-left">К-ть</th>
+                <th className="p-3 w-1/6 text-left">Сума</th>
+                <th className="p-3 w-1/6 text-left">Дія</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cart.map(({ product, quantity }) => {
+                const unitPrice = round1(product.price)
+                const lineTotal = round1(unitPrice * quantity)
+                return (
+                  <motion.tr
+                    key={product._id}
+                    className="border-t hover:bg-gray-50"
+                    variants={itemVariants}
+                  >
                     <td className="p-3 flex items-center space-x-3">
                       <img
                         src={product.image || '/images/placeholder.png'}
@@ -120,130 +189,122 @@ export default function CartPage() {
                       />
                       <span>{product.name}</span>
                     </td>
-                    <td className="p-3">{product.price} ₴</td>
+                    <td className="p-3">{unitPrice} ₴</td>
                     <td className="p-3">
                       <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => changeQty(product, -1)}
-                          className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                        >−</button>
+                        <button onClick={() => changeQty(product, -1)} className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                          −
+                        </button>
                         <span>{quantity}</span>
-                        <button
-                          onClick={() => changeQty(product, 1)}
-                          className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                        >+</button>
+                        <button onClick={() => changeQty(product, 1)} className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                          +
+                        </button>
                       </div>
                     </td>
-                    <td className="p-3">{product.price * quantity} ₴</td>
+                    <td className="p-3">{lineTotal} ₴</td>
                     <td className="p-3">
-                      <button
-                        onClick={() => removeItem(product._id)}
-                        className="text-red-600 hover:underline text-sm"
-                      >
+                      <button onClick={() => removeCartItem(product._id)} className="text-red-600 hover:underline text-sm">
                         Видалити
                       </button>
                     </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  </motion.tr>
+                )
+              })}
+            </tbody>
+          </motion.table>
 
           {/* Mobile cards */}
-          <div className="md:hidden space-y-4">
-            {cart.map(({ product, quantity }) => (
-              <div
-                key={product._id}
-                className="bg-white shadow-sm rounded flex flex-col space-y-3 p-4"
-              >
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={product.image || '/images/placeholder.png'}
-                    alt={product.name}
-                    className="h-20 w-20 object-cover rounded"
-                  />
-                  <div className="flex-1">
+          <motion.div className="md:hidden space-y-4" initial="hidden" animate="visible" variants={listVariants}>
+            {cart.map(({ product, quantity }) => {
+              const unitPrice = round1(product.price)
+              const lineTotal = round1(unitPrice * quantity)
+              return (
+                <motion.div key={product._id} className="bg-white shadow-sm rounded p-4" variants={itemVariants}>
+                  <div className="flex justify-between items-center mb-2">
                     <h2 className="font-semibold">{product.name}</h2>
-                    <p className="text-green-600">{product.price} ₴</p>
+                    <button onClick={() => removeCartItem(product._id)} className="text-red-600 hover:underline text-sm">
+                      Видалити
+                    </button>
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => changeQty(product, -1)}
-                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                    >−</button>
-                    <span>{quantity}</span>
-                    <button
-                      onClick={() => changeQty(product, 1)}
-                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                    >+</button>
+                  <div className="flex justify-between mb-1">
+                    <span>Ціна за од.: {unitPrice} ₴</span>
+                    <span>К-ть: {quantity}</span>
                   </div>
-                  <button
-                    onClick={() => removeItem(product._id)}
-                    className="text-red-600 hover:underline text-sm"
-                  >
-                    Видалити
-                  </button>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Сума:</span>
-                  <span className="font-semibold">
-                    {product.price * quantity} ₴
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+                  <div className="flex justify-between font-semibold">
+                    <span>Сума:</span>
+                    <span>{lineTotal} ₴</span>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </motion.div>
 
           {/* Summary & confirm */}
-          <div className="mt-6 bg-white shadow-sm rounded p-4 flex flex-col md:flex-row md:items-center justify-between">
+          <motion.div className="mt-6 bg-white shadow-sm rounded p-4 flex flex-col md:flex-row md:items-center justify-between" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <div className="text-lg font-semibold mb-4 md:mb-0">
-              Всього: <span className="text-green-600">{totalPrice} ₴</span>
+              Всього: <span className="text-green-600">{round1(totalPrice)} ₴</span>
             </div>
             <div className="flex space-x-2">
-              <button
-                onClick={handleConfirm}
-                disabled={loading}
-                className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50 transition"
-              >
-                {loading ? 'Оформляємо...' : 'Підтвердити'}
-              </button>
-              <button
-                onClick={clearAll}
-                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition"
-              >
+              <motion.button onClick={handleConfirm} disabled={loading} whileTap={{ scale: 0.95 }} className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50 transition">
+                {loading ? 'Оформляємо…' : 'Підтвердити'}
+              </motion.button>
+              <button onClick={clearAll} className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition">
                 Очистити кошик
               </button>
             </div>
-          </div>
+          </motion.div>
         </>
       )}
 
-      {/* Нижче показуємо ваше попереднє замовлення */}
-      {!orderLoading && myOrder && (
-        <div className="mt-12 p-6 bg-blue-50 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Ваше попереднє замовлення</h2>
-          <p className="mb-2">📦 <strong>ID:</strong> {myOrder._id}</p>
-          <p className="mb-2">⏳ <strong>Статус:</strong> {statusLabels[myOrder.status]}</p>
-          <p className="mb-4">🗓 <strong>Дата:</strong> {dayjs(myOrder.createdAt).format('DD.MM.YYYY HH:mm')}</p>
+      {/* Історія замовлень */}
+      <div className="mt-12">
+        <h2 className="text-xl font-semibold mb-4">Історія замовлень</h2>
 
-          <h3 className="text-lg font-medium mb-2">Склад замовлення:</h3>
-          <ul className="space-y-2">
-            {myOrder.products.map((p, i) => {
-              const name = p.product?.name || p.productId?.name
-              const qty = p.quantity
-              const price = (p.product?.price ?? p.productId?.price) * qty
+        {ordersLoading ? (
+          <div className="text-center py-10">
+            <motion.div className="w-12 h-12 border-4 border-gray-200 border-t-green-500 rounded-full mx-auto" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} />
+            <p className="mt-4 text-gray-500">Завантаження історії…</p>
+          </div>
+        ) : !orders.length ? (
+          <p className="text-gray-500">Ви ще не робили замовлень</p>
+        ) : (
+          <motion.ul className="space-y-6" initial="hidden" animate="visible" variants={listVariants}>
+            {orders.map(order => {
+              const total = computeOrderTotal(order)
+              const statusBorder =
+                order.status === 'new' ? 'border-yellow-500' :
+                  order.status === 'processing' ? 'border-blue-500' :
+                    'border-green-500'
+
               return (
-                <li key={i} className="flex justify-between">
-                  <span>{name} × {qty}</span>
-                  <span>{price} ₴</span>
-                </li>
+                <motion.li key={order._id} className={`bg-white rounded shadow-sm p-4 border-l-4 ${statusBorder}`} variants={itemVariants}>
+                  <div className="flex justify-between mb-2">
+                    <span className="font-medium">ID: {order._id}</span>
+                    <span className="text-sm text-gray-500">{dayjs(order.createdAt).format('DD.MM.YYYY HH:mm')}</span>
+                  </div>
+                  <div className="mb-2"><strong>Статус:</strong> {statusLabels[order.status]}</div>
+                  <div className="mb-2"><strong>Сума замовлення:</strong> <span className="text-green-600">{total} ₴</span></div>
+                  <div className="font-medium mb-1">Товари:</div>
+                  <ul className="pl-4 list-disc text-sm text-gray-700 space-y-1">
+                    {order.products.map((p, i) => {
+                      // беремо назву й ціну з populated productId
+                      const name = p.productId?.name || '—'
+                      const unit = p.price ?? p.productId?.price ?? 0
+                      const line = round1(unit * p.quantity)
+                      return (
+                        <li key={i} className="flex justify-between">
+                          <span>{name} × {p.quantity}</span>
+                          <span>{line} ₴</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </motion.li>
               )
             })}
-          </ul>
-        </div>
-      )}
+          </motion.ul>
+        )}
+      </div>
     </div>
   )
 }

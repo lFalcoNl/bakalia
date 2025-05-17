@@ -57,3 +57,12 @@ exports.login = async (req, res) => {
     return res.status(500).json({ message: 'Внутрішня помилка сервера' });
   }
 };
+
+// Новий: повертає поточного авторизованого користувача
+exports.me = async (req, res) => {
+  // тут req.user — це Mongoose-документ з auth-middleware
+  const { _id, surname, street, phone, role, isApproved } = req.user;
+  res.json({
+    user: { _id, surname, street, phone, role, isApproved }
+  });
+};

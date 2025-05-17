@@ -10,12 +10,12 @@ api.interceptors.request.use(config => {
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`
   }
-  console.log(
-    '→ API Request:',
-    config.method.toUpperCase(),
-    config.url,
-    config.headers.Authorization
-  )
+  // console.log(
+  //   '→ API Request:',
+  //   config.method.toUpperCase(),
+  //   config.url,
+  //   config.headers.Authorization
+  // )
   return config
 })
 

@@ -1,68 +1,86 @@
-import React, { createContext, useState, useEffect } from 'react'
+// frontend/src/context/AuthContext.jsx
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useCallback
+} from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../api/api'
-
-const decodeToken = token => {
-  const base64Url = token.split('.')[1]
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-  const jsonPayload = decodeURIComponent(
-    atob(base64)
-      .split('')
-      .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-      .join('')
-  )
-  return JSON.parse(jsonPayload)
-}
 
 export const AuthContext = createContext()
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      api.defaults.headers.common.Authorization = `Bearer ${token}`
-      try {
-        const decoded = decodeToken(token)
-        setUser({
-          id: decoded.id,
-          role: decoded.role,
-          surname: decoded.surname,
-          phone: decoded.phone
-        })
-      } catch (err) {
-        console.error('Invalid token:', err)
-        localStorage.removeItem('token')
-      }
-    }
-    setLoading(false)
-  }, [])
-
-  const login = async (phone, password) => {
-    const { data } = await api.post('/auth/login', { phone, password })
-    const { token, user: payloadUser } = data
-    localStorage.setItem('token', token)
-    api.defaults.headers.common.Authorization = `Bearer ${token}`
-    setUser({
-      id: payloadUser.id,
-      role: payloadUser.role,
-      surname: payloadUser.surname,
-      phone: payloadUser.phone
-    })
-    return payloadUser
-  }
-
-  const register = async (surname, street, phone, password) => {
-    return api.post('/auth/register', { surname, street, phone, password })
-  }
-
-  const logout = () => {
+  // Функція логауту
+  const logout = useCallback(() => {
     delete api.defaults.headers.common.Authorization
     localStorage.removeItem('token')
     setUser(null)
+    navigate('/register', { replace: true })
+  }, [navigate])
+
+  // При монтуванні провайдера перевіряємо «живого» користувача
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setLoading(false)
+      return
+    }
+
+    // Встановлюємо заголовок для всіх запитів
+    api.defaults.headers.common.Authorization = `Bearer ${token}`
+
+    // Викликаємо бекенд, щоб перевірити існування користувача
+    api.get('/auth/me')
+      .then(({ data }) => {
+        setUser(data.user)
+      })
+      .catch(() => {
+        // якщо 401 або 403 — логаутимось
+        logout()
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [logout])
+
+  // Інтерцептор: якщо будь-який запит поверне 401 → логаут
+  useEffect(() => {
+    const id = api.interceptors.response.use(
+      resp => resp,
+      err => {
+        if (err.response?.status === 401) {
+          logout()
+        }
+        return Promise.reject(err)
+      }
+    )
+    return () => api.interceptors.response.eject(id)
+  }, [logout])
+
+  // Функція логіну
+  const login = async (phone, password) => {
+    const { data } = await api.post('/auth/login', { phone, password })
+    const { token, user: payload } = data
+
+    localStorage.setItem('token', token)
+    api.defaults.headers.common.Authorization = `Bearer ${token}`
+    setUser(payload)
+    navigate('/', { replace: true })
+
+    return payload
   }
 
+  // Функція реєстрації
+  const register = (surname, street, phone, password) => {
+    return api.post('/auth/register', { surname, street, phone, password })
+  }
+
+  // Поки перевіряємо, нічого не рендеримо
   if (loading) return null
 
   return (

@@ -1,17 +1,19 @@
-import { Navigate } from 'react-router-dom'
-import { useContext } from 'react'
+// frontend/src/components/PrivateRoute.jsx
+import React, { useContext } from 'react'
+import { Navigate, Outlet } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
 
-export default function PrivateRoute({ children, adminOnly = false }) {
+export default function PrivateRoute({ adminOnly = false }) {
   const { user } = useContext(AuthContext)
 
+  // якщо не залогінені — на /register
   if (!user) {
-    // Неавторизовані — на /login
-    return <Navigate to="/login" replace />
+    return <Navigate to="/register" replace />
   }
+  // якщо потрібна роль admin, але роль не підходить — на /
   if (adminOnly && user.role !== 'admin') {
-    // Не admin — заборонено
-    return <p>Доступ заборонено</p>
+    return <Navigate to="/" replace />
   }
-  return children
+  // інакше виводимо вкладені роути
+  return <Outlet />
 }

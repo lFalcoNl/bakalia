@@ -18,7 +18,6 @@ exports.getAll = async (req, res) => {
       minOrder: p.minOrder,
       createdAt: p.createdAt,
       image: toDataUrl(p)
-      // code прибрано
     }));
     res.json(result);
   } catch (err) {
@@ -49,7 +48,6 @@ exports.create = async (req, res) => {
       minOrder: prod.minOrder,
       createdAt: prod.createdAt,
       image: toDataUrl(prod)
-      // code прибрано
     };
     res.status(201).json(out);
   } catch (err) {
@@ -82,7 +80,6 @@ exports.update = async (req, res) => {
       minOrder: prod.minOrder,
       createdAt: prod.createdAt,
       image: toDataUrl(prod)
-      // code прибрано
     };
     res.json(out);
   } catch (err) {
@@ -96,10 +93,17 @@ exports.remove = async (req, res) => {
     const { id } = req.params;
     const prod = await Product.findById(id);
     if (!prod) return res.status(404).json({ msg: 'Товар не знайдено' });
-    // Видаляємо всі замовлення з цим товаром
-    await Order.deleteMany({ 'products.productId': id });
+
+    await Order.updateMany(
+      { 'products.productId': id },
+      { $pull: { products: { productId: id } } }
+    );
+
+    await Order.deleteMany({ products: { $size: 0 } });
+
     await Product.findByIdAndDelete(id);
-    res.json({ msg: 'Товар видалено' });
+
+    res.json({ msg: 'Товар видалено, позицію прибрано з замовлень' });
   } catch (err) {
     console.error('productController.remove error:', err);
     res.status(500).json({ msg: 'Помилка видалення товару' });

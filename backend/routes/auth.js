@@ -1,7 +1,12 @@
-const router = require('express').Router();
-const { register, login } = require('../controllers/authController');
+const router = require('express').Router()
+const { register, login, me } = require('../controllers/authController')
+const auth = require('../middleware/auth')
 
-router.post('/register', register);
-router.post('/login', login);
+// Публічні
+router.post('/register', register)
+router.post('/login', login)
 
-module.exports = router;
+// Захищений: перевіряємо токен і наявність користувача
+router.get('/me', auth, me)
+
+module.exports = router
