@@ -14,5 +14,8 @@ export const categories = [
   { name: 'Побутова хімія', image: '/images/categories/chemicals.jpg' },
   { name: 'Господарські товари', image: '/images/categories/household.jpg' },
   { name: 'Мінеральні добрива', image: '/images/categories/fertilizers.jpg' },
+  { name: 'Засоби гігієни', image: '/images/categories/nophoto.png' },
+  { name: 'Канцтовари', image: '/images/categories/nophoto.png' },
+  { name: 'Дитячі товари', image: '/images/categories/nophoto.png' },
   { name: 'Інші товари', image: '/images/categories/others.jpg' }
 ];
