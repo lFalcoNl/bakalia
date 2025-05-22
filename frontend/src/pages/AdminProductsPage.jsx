@@ -404,13 +404,13 @@ export default function AdminProductsPage() {
                         <>
                           <button
                             onClick={() => saveEdit(p._id)}
-                            className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition"
+                            className="bg-blue-600 my-2 text-white px-2 py-1 rounded hover:bg-blue-700 transition"
                           >
                             Зберегти
                           </button>
                           <button
                             onClick={cancelEdit}
-                            className="bg-gray-400 text-white px-2 py-1 rounded hover:bg-gray-500 transition"
+                            className="bg-gray-400 my-2 text-white px-2 py-1 rounded hover:bg-gray-500 transition"
                           >
                             Відмінити
                           </button>
