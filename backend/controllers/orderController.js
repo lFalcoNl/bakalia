@@ -36,7 +36,7 @@ exports.getMyOrder = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     const { products: newItems } = req.body
-    let order = await Order.findOne({ userId: req.user._id, status: 'cannot' })
+    let order = await Order.findOne({ userId: req.user._id, status: 'new' })
     if (!order) {
       order = new Order({
         userId: req.user._id,
