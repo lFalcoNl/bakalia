@@ -1,4 +1,3 @@
-// frontend/src/pages/CategoryPage.jsx
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -17,33 +16,68 @@ export default function CategoryPage() {
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [sort, setSort] = useState('')
-    const [page, setPage] = useState(1)
-    const limit = 20
 
     useEffect(() => {
-        if (
-            category !== 'Усі товари' &&
-            !categories.some(c => c.name === category)
-        ) {
-            addNotification(`Категорія «${category}» не знайдена`)
-            navigate('/', { replace: true })
-            return
-        }
-
         setLoading(true)
-        api
-            .get('/products', {
-                params: { page, limit, category, search, sort }
-            })
-            .then(res => setProducts(res.data))
+        api.get('/products')
+            .then(r => setProducts(r.data))
             .catch(() => addNotification('Не вдалося завантажити товари'))
             .finally(() => setLoading(false))
-    }, [category, page, search, sort, addNotification, navigate])
+    }, [addNotification])
 
-    const { data = [], totalPages = 1 } = products
+    const exists =
+        category === 'Усі товари' || categories.some(c => c.name === category)
+    if (!exists) {
+        return (
+            <p className="p-4 text-red-600">
+                Категорія «{category}» не знайдена
+            </p>
+        )
+    }
 
-    const contVars = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }
-    const itemVars = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }
+    // фільтрація + пошук
+    let filtered = products
+        .filter(p =>
+            category === 'Усі товари' ? true : p.category === category
+        )
+        .filter(p =>
+            p.name.toLowerCase().includes(search.toLowerCase())
+        )
+
+    // сортування
+    filtered = filtered.slice()
+    switch (sort) {
+        case 'price_asc':
+            filtered.sort((a, b) => a.price - b.price)
+            break
+        case 'price_desc':
+            filtered.sort((a, b) => b.price - a.price)
+            break
+        case 'date_new':
+            filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            break
+        case 'date_old':
+            filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+            break
+        case 'alpha_asc':
+            filtered.sort((a, b) => a.name.localeCompare(b.name))
+            break
+        case 'alpha_desc':
+            filtered.sort((a, b) => b.name.localeCompare(a.name))
+            break
+        default:
+            break
+    }
+
+    // анімація
+    const containerVariants = {
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.1 } }
+    }
+    const cardVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 }
+    }
 
     return (
         <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
@@ -53,7 +87,11 @@ export default function CategoryPage() {
                     className="flex items-center px-4 py-2 bg-white shadow rounded-lg border border-gray-200 hover:bg-gray-100 focus:outline-none"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
+                    {/* ← стрілка */}
                     <svg
                         className="w-5 h-5 mr-2 text-gray-600"
                         fill="none"
@@ -76,9 +114,9 @@ export default function CategoryPage() {
 
             <SearchSort
                 search={search}
-                onSearch={val => { setSearch(val); setPage(1) }}
+                onSearch={setSearch}
                 sort={sort}
-                onSort={val => { setSort(val); setPage(1) }}
+                onSort={setSort}
             />
 
             {loading ? (
@@ -90,49 +128,18 @@ export default function CategoryPage() {
                     />
                 </div>
             ) : (
-                <>
-                    <motion.div
-                        className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-                        variants={contVars}
-                        initial="hidden"
-                        animate="visible"
-                    >
-                        {data.map(p => (
-                            <motion.div key={p._id} variants={itemVars}>
-                                <ProductCard product={p} />
-                            </motion.div>
-                        ))}
-                    </motion.div>
-
-                    {totalPages > 1 && (
-                        <nav className="flex justify-center items-center mt-6 space-x-2">
-                            <button
-                                onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                                disabled={page === 1}
-                                className="px-3 py-1 bg-white border rounded disabled:opacity-50 hover:bg-gray-100"
-                            >
-                                &laquo; Prev
-                            </button>
-                            {Array.from({ length: totalPages }, (_, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => setPage(i + 1)}
-                                    className={`px-3 py-1 border rounded hover:bg-gray-100 ${page === i + 1 ? 'bg-green-600 text-white' : 'bg-white'
-                                        }`}
-                                >
-                                    {i + 1}
-                                </button>
-                            ))}
-                            <button
-                                onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
-                                disabled={page === totalPages}
-                                className="px-3 py-1 bg-white border rounded disabled:opacity-50 hover:bg-gray-100"
-                            >
-                                Next &raquo;
-                            </button>
-                        </nav>
-                    )}
-                </>
+                <motion.div
+                    className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                >
+                    {filtered.map(p => (
+                        <motion.div key={p._id} variants={cardVariants}>
+                            <ProductCard product={p} />
+                        </motion.div>
+                    ))}
+                </motion.div>
             )}
         </div>
     )
