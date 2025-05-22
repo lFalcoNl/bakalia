@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+// frontend/src/pages/CategoryPage.jsx
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import api from '../api/api'
@@ -17,6 +18,11 @@ export default function CategoryPage() {
     const [search, setSearch] = useState('')
     const [sort, setSort] = useState('')
 
+    // pagination state
+    const [page, setPage] = useState(1)
+    const limit = 20
+
+    // fetch once
     useEffect(() => {
         setLoading(true)
         api.get('/products')
@@ -25,8 +31,15 @@ export default function CategoryPage() {
             .finally(() => setLoading(false))
     }, [addNotification])
 
+    // reset page when filters change
+    useEffect(() => {
+        setPage(1)
+    }, [category, search, sort])
+
+    // validate category
     const exists =
-        category === 'Усі товари' || categories.some(c => c.name === category)
+        category === 'Усі товари' ||
+        categories.some(c => c.name === category)
     if (!exists) {
         return (
             <p className="p-4 text-red-600">
@@ -35,41 +48,46 @@ export default function CategoryPage() {
         )
     }
 
-    // фільтрація + пошук
-    let filtered = products
-        .filter(p =>
-            category === 'Усі товари' ? true : p.category === category
-        )
-        .filter(p =>
-            p.name.toLowerCase().includes(search.toLowerCase())
-        )
+    // filter + search
+    const filtered = useMemo(() => {
+        return products
+            .filter(p => category === 'Усі товари' ? true : p.category === category)
+            .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    }, [products, category, search])
 
-    // сортування
-    filtered = filtered.slice()
-    switch (sort) {
-        case 'price_asc':
-            filtered.sort((a, b) => a.price - b.price)
-            break
-        case 'price_desc':
-            filtered.sort((a, b) => b.price - a.price)
-            break
-        case 'date_new':
-            filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            break
-        case 'date_old':
-            filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-            break
-        case 'alpha_asc':
-            filtered.sort((a, b) => a.name.localeCompare(b.name))
-            break
-        case 'alpha_desc':
-            filtered.sort((a, b) => b.name.localeCompare(a.name))
-            break
-        default:
-            break
-    }
+    // sort
+    const sorted = useMemo(() => {
+        const arr = [...filtered]
+        switch (sort) {
+            case 'price_asc':
+                arr.sort((a, b) => a.price - b.price)
+                break
+            case 'price_desc':
+                arr.sort((a, b) => b.price - a.price)
+                break
+            case 'date_new':
+                arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                break
+            case 'date_old':
+                arr.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+                break
+            case 'alpha_asc':
+                arr.sort((a, b) => a.name.localeCompare(b.name))
+                break
+            case 'alpha_desc':
+                arr.sort((a, b) => b.name.localeCompare(a.name))
+                break
+            default:
+                break
+        }
+        return arr
+    }, [filtered, sort])
 
-    // анімація
+    // pagination slice
+    const totalPages = Math.ceil(sorted.length / limit)
+    const pageItems = sorted.slice((page - 1) * limit, page * limit)
+
+    // animations
     const containerVariants = {
         hidden: {},
         visible: { transition: { staggerChildren: 0.1 } }
@@ -81,29 +99,19 @@ export default function CategoryPage() {
 
     return (
         <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
+
+            {/* header + back button */}
             <div className="flex items-center justify-between mb-6 flex-wrap">
                 <motion.button
                     onClick={() => navigate(-1)}
                     className="flex items-center px-4 py-2 bg-white shadow rounded-lg border border-gray-200 hover:bg-gray-100 focus:outline-none"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
-                    {/* ← стрілка */}
-                    <svg
-                        className="w-5 h-5 mr-2 text-gray-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 19l-7-7 7-7"
-                        />
+                    <svg className="w-5 h-5 mr-2 text-gray-600"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M15 19l-7-7 7-7" />
                     </svg>
                     <span className="text-gray-700 font-medium">Назад</span>
                 </motion.button>
@@ -112,6 +120,7 @@ export default function CategoryPage() {
                 </h1>
             </div>
 
+            {/* search & sort */}
             <SearchSort
                 search={search}
                 onSearch={setSearch}
@@ -128,18 +137,51 @@ export default function CategoryPage() {
                     />
                 </div>
             ) : (
-                <motion.div
-                    className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                >
-                    {filtered.map(p => (
-                        <motion.div key={p._id} variants={cardVariants}>
-                            <ProductCard product={p} />
-                        </motion.div>
-                    ))}
-                </motion.div>
+                <>
+                    {/* product grid */}
+                    <motion.div
+                        className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                    >
+                        {pageItems.map(p => (
+                            <motion.div key={p._id} variants={cardVariants}>
+                                <ProductCard product={p} />
+                            </motion.div>
+                        ))}
+                    </motion.div>
+
+                    {/* pagination */}
+                    {totalPages > 1 && (
+                        <nav className="flex justify-center items-center mt-6 space-x-2">
+                            <button
+                                onClick={() => setPage(page - 1)}
+                                disabled={page === 1}
+                                className="px-3 py-1 bg-white border rounded disabled:opacity-50 hover:bg-gray-100"
+                            >
+                                &laquo; Prev
+                            </button>
+                            {Array.from({ length: totalPages }, (_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setPage(i + 1)}
+                                    className={`px-3 py-1 border rounded hover:bg-gray-100 ${page === i + 1 ? 'bg-secondary text-white' : 'bg-white'
+                                        }`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => setPage(page + 1)}
+                                disabled={page === totalPages}
+                                className="px-3 py-1 bg-white border rounded disabled:opacity-50 hover:bg-gray-100"
+                            >
+                                Next &raquo;
+                            </button>
+                        </nav>
+                    )}
+                </>
             )}
         </div>
     )
