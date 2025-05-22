@@ -20,13 +20,14 @@ exports.getAll = async (req, res) => {
             category: 1,
             minOrder: 1,
             createdAt: 1,
+            updatedAt: 1,       // include updatedAt
             imageData: 1,
             imageType: 1
           }
         }
       ],
       { allowDiskUse: true }
-    )
+    );
 
     const result = docs.map(p => ({
       _id: p._id,
@@ -35,13 +36,14 @@ exports.getAll = async (req, res) => {
       category: p.category,
       minOrder: p.minOrder,
       createdAt: p.createdAt,
+      updatedAt: p.updatedAt,     // return updatedAt
       image: toDataUrl(p)
-    }))
+    }));
 
-    res.json(result)
+    res.json(result);
   } catch (err) {
-    console.error('productController.getAll error:', err)
-    res.status(500).json({ msg: 'Помилка отримання товарів' })
+    console.error('productController.getAll error:', err);
+    res.status(500).json({ msg: 'Помилка отримання товарів' });
   }
 };
 
@@ -59,16 +61,16 @@ exports.create = async (req, res) => {
       data.imageType = req.file.mimetype;
     }
     const prod = await new Product(data).save();
-    const out = {
+    res.status(201).json({
       _id: prod._id,
       name: prod.name,
       price: prod.price,
       category: prod.category,
       minOrder: prod.minOrder,
       createdAt: prod.createdAt,
+      updatedAt: prod.updatedAt,   // include updatedAt
       image: toDataUrl(prod)
-    };
-    res.status(201).json(out);
+    });
   } catch (err) {
     console.error('productController.create error:', err);
     res.status(500).json({ msg: 'Помилка створення товару' });
@@ -88,19 +90,23 @@ exports.update = async (req, res) => {
       data.imageData = req.file.buffer.toString('base64');
       data.imageType = req.file.mimetype;
     }
-    const prod = await Product.findByIdAndUpdate(req.params.id, data, { new: true });
+    const prod = await Product.findByIdAndUpdate(
+      req.params.id,
+      data,
+      { new: true, runValidators: true }
+    );
     if (!prod) return res.status(404).json({ msg: 'Товар не знайдено' });
 
-    const out = {
+    res.json({
       _id: prod._id,
       name: prod.name,
       price: prod.price,
       category: prod.category,
       minOrder: prod.minOrder,
       createdAt: prod.createdAt,
+      updatedAt: prod.updatedAt,   // include updatedAt
       image: toDataUrl(prod)
-    };
-    res.json(out);
+    });
   } catch (err) {
     console.error('productController.update error:', err);
     res.status(500).json({ msg: 'Помилка оновлення товару' });
@@ -117,9 +123,7 @@ exports.remove = async (req, res) => {
       { 'products.productId': id },
       { $pull: { products: { productId: id } } }
     );
-
     await Order.deleteMany({ products: { $size: 0 } });
-
     await Product.findByIdAndDelete(id);
 
     res.json({ msg: 'Товар видалено, позицію прибрано з замовлень' });

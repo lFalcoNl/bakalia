@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
     navigate('/register', { replace: true })
   }, [navigate])
 
-  // При монтуванні провайдера перевіряємо «живого» користувача
+  // Перевірка токена на стартапі
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) {
@@ -31,16 +31,13 @@ export function AuthProvider({ children }) {
       return
     }
 
-    // Встановлюємо заголовок для всіх запитів
     api.defaults.headers.common.Authorization = `Bearer ${token}`
 
-    // Викликаємо бекенд, щоб перевірити існування користувача
     api.get('/auth/me')
       .then(({ data }) => {
         setUser(data.user)
       })
       .catch(() => {
-        // якщо 401 або 403 — логаутимось
         logout()
       })
       .finally(() => {
@@ -48,7 +45,7 @@ export function AuthProvider({ children }) {
       })
   }, [logout])
 
-  // Інтерцептор: якщо будь-який запит поверне 401 → логаут
+  // Інтерцептор для 401
   useEffect(() => {
     const id = api.interceptors.response.use(
       resp => resp,
@@ -75,12 +72,12 @@ export function AuthProvider({ children }) {
     return payload
   }
 
-  // Функція реєстрації
-  const register = (surname, street, phone, password) => {
+  // Функція реєстрації (приймає об’єкт)
+  const register = ({ surname, street, phone, password }) => {
     return api.post('/auth/register', { surname, street, phone, password })
   }
 
-  // Поки перевіряємо, нічого не рендеримо
+  // Поки перевіряємо token – нічого не рендеримо
   if (loading) return null
 
   return (

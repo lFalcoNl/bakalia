@@ -42,25 +42,11 @@ export default function CartPage() {
         : []
       setOrders(sorted)
     } catch (err) {
-      if (err.response?.status === 404) {
-        // fallback
-        try {
-          const { data: all } = await api.get('/orders')
-          const list = Array.isArray(all) ? all : all.orders ? all.orders : [all]
-          const mine = list
-            .filter(o => o.user?._id === user._id || o.userId === user._id)
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          setOrders(mine)
-        } catch {
-          addNotification('Не вдалося завантажити історію замовлень')
-        }
-      } else {
-        addNotification('Не вдалося завантажити історію замовлень')
-      }
+      addNotification('Не вдалося завантажити історію замовлень')
     } finally {
       setOrdersLoading(false)
     }
-  }, [addNotification, user])
+  }, [addNotification])
 
   useEffect(() => {
     fetchOrders()
@@ -80,6 +66,10 @@ export default function CartPage() {
     }
     if (!cart.length) {
       addNotification('Ваш кошик порожній')
+      return
+    }
+    if (round1(totalPrice) < 2000) {
+      addNotification('Мінімальна сума замовлення — 2000 ₴')
       return
     }
     for (const { product, quantity } of cart) {
@@ -128,7 +118,6 @@ export default function CartPage() {
   const computeOrderTotal = order =>
     round1(
       order.products.reduce((sum, p) => {
-        // беремо ціну з поля price, або, якщо його нема, з populated productId
         const unit = p.price ?? p.productId?.price ?? 0
         return sum + unit * p.quantity
       }, 0)
@@ -138,7 +127,6 @@ export default function CartPage() {
     <div className="w-full max-w-[1300px] mx-auto px-4 py-6">
       <h1 className="text-2xl font-semibold mb-6">Ваш кошик</h1>
 
-      {/* Кошик */}
       {cartLoading ? (
         <div className="text-center py-20 text-gray-500">
           <motion.div
@@ -157,18 +145,18 @@ export default function CartPage() {
         <>
           {/* Desktop table */}
           <motion.table
-            className="hidden md:table w-full table-fixed bg-white shadow-sm rounded overflow-hidden"
+            className="hidden md:table w-full table-auto bg-white shadow-sm rounded overflow-hidden"
             initial="hidden"
             animate="visible"
             variants={listVariants}
           >
             <thead className="bg-gray-100 text-gray-600 text-sm">
               <tr>
-                <th className="p-3 w-1/5 text-left">Товар</th>
-                <th className="p-3 w-1/6 text-left">Ціна</th>
-                <th className="p-3 w-1/6 text-left">К-ть</th>
-                <th className="p-3 w-1/6 text-left">Сума</th>
-                <th className="p-3 w-1/6 text-left">Дія</th>
+                <th className="p-3 text-left">Товар</th>
+                <th className="p-3 text-left">Ціна</th>
+                <th className="p-3 text-left">К-ть</th>
+                <th className="p-3 text-left">Сума</th>
+                <th className="p-3 text-left">Дія</th>
               </tr>
             </thead>
             <tbody>
@@ -181,29 +169,40 @@ export default function CartPage() {
                     className="border-t hover:bg-gray-50"
                     variants={itemVariants}
                   >
-                    <td className="p-3 flex items-center space-x-3">
+                    <td className="p-3 flex items-start space-x-4">
                       <img
-                        src={product.image || '/images/placeholder.png'}
+                        src={product.image || '/images/categories/nophoto.png'}
                         alt={product.name}
                         className="h-16 w-16 object-cover rounded"
                       />
-                      <span>{product.name}</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="block w-full break-words">{product.name}</span>
+                      </div>
                     </td>
                     <td className="p-3">{unitPrice} ₴</td>
                     <td className="p-3">
-                      <div className="flex items-center space-x-2">
-                        <button onClick={() => changeQty(product, -1)} className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                      <div className="flex items-center space-x-4">
+                        <button
+                          onClick={() => changeQty(product, -1)}
+                          className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                        >
                           −
                         </button>
                         <span>{quantity}</span>
-                        <button onClick={() => changeQty(product, 1)} className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                        <button
+                          onClick={() => changeQty(product, 1)}
+                          className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                        >
                           +
                         </button>
                       </div>
                     </td>
                     <td className="p-3">{lineTotal} ₴</td>
                     <td className="p-3">
-                      <button onClick={() => removeCartItem(product._id)} className="text-red-600 hover:underline text-sm">
+                      <button
+                        onClick={() => removeCartItem(product._id)}
+                        className="text-red-600 hover:underline text-sm"
+                      >
                         Видалити
                       </button>
                     </td>
@@ -214,15 +213,27 @@ export default function CartPage() {
           </motion.table>
 
           {/* Mobile cards */}
-          <motion.div className="md:hidden space-y-4" initial="hidden" animate="visible" variants={listVariants}>
+          <motion.div
+            className="md:hidden space-y-4"
+            initial="hidden"
+            animate="visible"
+            variants={listVariants}
+          >
             {cart.map(({ product, quantity }) => {
               const unitPrice = round1(product.price)
               const lineTotal = round1(unitPrice * quantity)
               return (
-                <motion.div key={product._id} className="bg-white shadow-sm rounded p-4" variants={itemVariants}>
+                <motion.div
+                  key={product._id}
+                  className="bg-white shadow-sm rounded p-4"
+                  variants={itemVariants}
+                >
                   <div className="flex justify-between items-center mb-2">
-                    <h2 className="font-semibold">{product.name}</h2>
-                    <button onClick={() => removeCartItem(product._id)} className="text-red-600 hover:underline text-sm">
+                    <h2 className="font-semibold break-words">{product.name}</h2>
+                    <button
+                      onClick={() => removeCartItem(product._id)}
+                      className="text-red-600 hover:underline text-sm"
+                    >
                       Видалити
                     </button>
                   </div>
@@ -240,15 +251,32 @@ export default function CartPage() {
           </motion.div>
 
           {/* Summary & confirm */}
-          <motion.div className="mt-6 bg-white shadow-sm rounded p-4 flex flex-col md:flex-row md:items-center justify-between" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div
+            className="mt-6 bg-white shadow-sm rounded p-4 flex flex-col md:flex-row md:items-center justify-between"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             <div className="text-lg font-semibold mb-4 md:mb-0">
               Всього: <span className="text-green-600">{round1(totalPrice)} ₴</span>
             </div>
+            {round1(totalPrice) < 2000 && (
+              <p className="text-red-500 text-sm mb-4 md:mb-0">
+                Мінімальне замовлення — 2000 ₴. Додайте ще {round1(2000 - round1(totalPrice))} ₴.
+              </p>
+            )}
             <div className="flex space-x-2">
-              <motion.button onClick={handleConfirm} disabled={loading} whileTap={{ scale: 0.95 }} className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50 transition">
+              <motion.button
+                onClick={handleConfirm}
+                disabled={loading || round1(totalPrice) < 2000}
+                whileTap={{ scale: 0.95 }}
+                className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50 transition"
+              >
                 {loading ? 'Оформляємо…' : 'Підтвердити'}
               </motion.button>
-              <button onClick={clearAll} className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition">
+              <button
+                onClick={clearAll}
+                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition"
+              >
                 Очистити кошик
               </button>
             </div>
@@ -259,10 +287,13 @@ export default function CartPage() {
       {/* Історія замовлень */}
       <div className="mt-12">
         <h2 className="text-xl font-semibold mb-4">Історія замовлень</h2>
-
         {ordersLoading ? (
           <div className="text-center py-10">
-            <motion.div className="w-12 h-12 border-4 border-gray-200 border-t-green-500 rounded-full mx-auto" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} />
+            <motion.div
+              className="w-12 h-12 border-4 border-gray-200 border-t-green-500 rounded-full mx-auto"
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+            />
             <p className="mt-4 text-gray-500">Завантаження історії…</p>
           </div>
         ) : !orders.length ? (
@@ -275,25 +306,31 @@ export default function CartPage() {
                 order.status === 'new' ? 'border-yellow-500' :
                   order.status === 'processing' ? 'border-blue-500' :
                     'border-green-500'
-
               return (
-                <motion.li key={order._id} className={`bg-white rounded shadow-sm p-4 border-l-4 ${statusBorder}`} variants={itemVariants}>
+                <motion.li
+                  key={order._id}
+                  className={`bg-white rounded shadow-sm p-4 border-l-4 ${statusBorder}`}
+                  variants={itemVariants}
+                >
                   <div className="flex justify-between mb-2">
                     <span className="font-medium">ID: {order._id}</span>
-                    <span className="text-sm text-gray-500">{dayjs(order.createdAt).format('DD.MM.YYYY HH:mm')}</span>
+                    <span className="text-sm text-gray-500">
+                      {dayjs(order.createdAt).format('DD.MM.YYYY HH:mm')}
+                    </span>
                   </div>
                   <div className="mb-2"><strong>Статус:</strong> {statusLabels[order.status]}</div>
-                  <div className="mb-2"><strong>Сума замовлення:</strong> <span className="text-green-600">{total} ₴</span></div>
+                  <div className="mb-2">
+                    <strong>Сума замовлення:</strong> <span className="text-green-600">{total} ₴</span>
+                  </div>
                   <div className="font-medium mb-1">Товари:</div>
                   <ul className="pl-4 list-disc text-sm text-gray-700 space-y-1">
                     {order.products.map((p, i) => {
-                      // беремо назву й ціну з populated productId
                       const name = p.productId?.name || '—'
                       const unit = p.price ?? p.productId?.price ?? 0
                       const line = round1(unit * p.quantity)
                       return (
                         <li key={i} className="flex justify-between">
-                          <span>{name} × {p.quantity}</span>
+                          <span className="break-words">{name} × {p.quantity}</span>
                           <span>{line} ₴</span>
                         </li>
                       )

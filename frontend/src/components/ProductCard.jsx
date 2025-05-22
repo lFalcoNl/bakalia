@@ -16,18 +16,15 @@ export default function ProductCard({ product }) {
 
   const [quantity, setQuantity] = useState(initialQty)
   const [showModal, setShowModal] = useState(false)
-  const [isZoomed, setIsZoomed] = useState(false)
   const [showZoomOverlay, setShowZoomOverlay] = useState(false)
+  const [isZoomed, setIsZoomed] = useState(false)
 
   useEffect(() => {
     setQuantity(existing ? existing.quantity : minOrder)
   }, [existing, minOrder])
 
   const changeQty = delta => {
-    setQuantity(prev => {
-      const next = prev + delta
-      return next < minOrder ? minOrder : next
-    })
+    setQuantity(prev => Math.max(minOrder, prev + delta))
   }
 
   const handleAddToCart = () => {
@@ -61,10 +58,10 @@ export default function ProductCard({ product }) {
 
   return (
     <>
-      <div className="relative bg-white border rounded-lg overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow duration-200">
-        {/* Image & "In Cart" badge */}
+      <div className="relative bg-white border rounded-lg overflow-hidden flex flex-col h-[32rem] w-full sm:w-64 md:w-72 hover:shadow-lg transition-shadow duration-200">
+        {/* 1. Зображення */}
         <div
-          className="relative w-full aspect-square cursor-pointer overflow-hidden"
+          className="w-full aspect-square cursor-pointer overflow-hidden"
           onClick={openZoom}
         >
           <img
@@ -79,40 +76,48 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* Details */}
-        <div className="p-4 flex-1 flex flex-col">
-          {/* Title with fixed min-height */}
+        {/* 2. Назва */}
+        <div className="p-4 flex-shrink-0 min-h-[5rem]">
           <CollapsibleText
             text={product.name}
             maxChars={80}
-            className="
-              text-base sm:text-lg font-semibold mb-2 text-gray-800
-              min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem]
-            "
+            className="text-base sm:text-lg font-semibold text-gray-800"
             moreLabel="…докладніше"
             lessLabel="згорнути"
           />
+        </div>
 
-          {/* Price always in same spot */}
-          <p className="text-green-600 font-bold mb-4">{product.price} ₴</p>
+        {/* 3. Ціна + контролери в одному блоці, прокладається внизу */}
+        <div className="mt-auto px-4 pb-4 flex flex-col space-y-2">
+          {/* Ціна прямо над лічильником */}
+          <p className="text-green-600 font-bold text-lg text-end">
+            {product.price} ₴
+          </p>
 
-          {/* Quantity stepper & Add button */}
-          <div className="mt-auto flex items-center space-x-2">
-            <button
-              onClick={() => changeQty(-1)}
-              className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 transition"
-            >–</button>
-            <span className="w-8 text-center">{quantity}</span>
-            <button
-              onClick={() => changeQty(1)}
-              className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded hover:bg-gray-300 transition"
-            >+</button>
-
+          {/* Лічильник + кнопка */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center border rounded-md overflow-hidden">
+              <button
+                onClick={() => changeQty(-1)}
+                className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition"
+              >
+                –
+              </button>
+              <span className="w-10 h-10 flex items-center justify-center border-x">
+                {quantity}
+              </span>
+              <button
+                onClick={() => changeQty(1)}
+                className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition"
+              >
+                +
+              </button>
+            </div>
             <button
               onClick={handleAddToCart}
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition"
+              className="ml-4 w-28 h-10 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition"
             >
-              {existing ? 'Оновити кошик' : 'Додати до кошика'}
+              {existing ? 'Оновити' : 'До кошика'}
             </button>
           </div>
         </div>
@@ -144,11 +149,11 @@ export default function ProductCard({ product }) {
         </div>
       )}
 
-      {/* Added-to-cart toast */}
+      {/* Toast */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center z-40 pointer-events-none">
           <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-bounce">
-            {existing ? 'Кошик оновлено!' : 'Товар додано до кошика!'}
+            {existing ? 'Кошик оновлено!' : 'Товар додано!'}
           </div>
         </div>
       )}

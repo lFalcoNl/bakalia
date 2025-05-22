@@ -21,7 +21,7 @@ function CategoryCard({ category }) {
     }
   }
 
-  // Щоби обнулити час монтування при кожному ререндері карти
+  // Обнуляємо час монтування при зміні зображення
   useEffect(() => {
     mountTimeRef.current = Date.now()
     setIsLoaded(false)
@@ -30,31 +30,57 @@ function CategoryCard({ category }) {
   return (
     <NavLink
       to={to}
-      className={({ isActive }) =>
-        `group block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md
-         transition-shadow duration-200 p-4 text-center ${isActive ? 'border-primary ring-2 ring-primary' : ''
-        }`
-      }
+      className={({ isActive }) => `
+        relative group block rounded-xl border bg-white shadow-sm
+        transition-transform duration-300 ease-out
+        hover:-translate-y-1 hover:shadow-lg active:scale-95
+        focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/50
+        ${isActive ? 'border-primary ring-2 ring-primary' : 'border-gray-200'}
+        p-4 text-center
+      `}
     >
-      <div className="w-full aspect-square mb-3 overflow-hidden rounded-md relative bg-gray-100">
-        {/* Скелетон: поки isLoaded=false */}
-        {!isLoaded && (
-          <div className="absolute inset-0 bg-gray-200 animate-pulse" />
-        )}
+      <div className="w-full aspect-square overflow-hidden rounded-md relative bg-gray-100">
+        {/* Shimmer-скелетон */}
+        <div
+          className={`
+            absolute inset-0 rounded-md
+            bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200
+            bg-[length:200%_100%] animate-shimmer
+            ${isLoaded ? 'opacity-0 transition-opacity duration-500' : 'opacity-100'}
+          `}
+        />
+
         <img
           src={category.image}
           alt={category.name}
           onLoad={handleLoad}
           loading="lazy"
           className={`
-            w-full h-full object-cover transform transition-opacity duration-200
-            ${isLoaded ? 'opacity-100' : 'opacity-0'}
+            w-full h-full object-cover
+            transform transition-all duration-700 ease-out
+            ${isLoaded
+              ? 'opacity-100 scale-100 blur-0'
+              : 'opacity-0 scale-105 blur-sm'}
           `}
         />
+
+        {/* Легка пульсація на ховер */}
+        <div className="
+          pointer-events-none
+          absolute inset-0 rounded-md
+          opacity-0 group-hover:opacity-10
+          bg-gradient-to-t from-transparent via-white to-transparent
+          animate-pulse-slow
+        " />
       </div>
-      <span className="block text-gray-700 font-medium group-hover:text-gray-900">
+
+      {/* <span className="
+        mt-3 block text-sm font-medium text-gray-800
+        transition-colors duration-300
+        group-hover:text-primary
+      ">
         {category.name}
-      </span>
+      </span> */}
     </NavLink>
   )
 }

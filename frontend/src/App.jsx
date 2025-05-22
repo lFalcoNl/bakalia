@@ -14,6 +14,7 @@ import RegisterPage from './pages/RegisterPage'
 import AdminProducts from './pages/AdminProductsPage'
 import AdminOrders from './pages/AdminOrdersPage'
 import AdminUsers from './pages/AdminUsersPage'
+import PrintPage from './pages/PrintPage'
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
 
             {/* адмінські */}
             <Route element={<PrivateRoute adminOnly />}>
+              <Route path="/admin/print" element={<PrintPage />} />
               <Route path="/admin/products" element={<AdminProducts />} />
               <Route path="/admin/orders" element={<AdminOrders />} />
               <Route path="/admin/users" element={<AdminUsers />} />
@@ -43,7 +45,7 @@ export default function App() {
           </Route>
 
           {/* всі інші шляхи → на реєстрацію */}
-          <Route path="*" element={<Navigate to="/register" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </main>
 

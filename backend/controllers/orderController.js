@@ -5,7 +5,7 @@ exports.getAll = async (req, res) => {
   try {
     const orders = await Order.find()
       .sort({ createdAt: -1 })
-      .populate('userId', 'surname phone')
+      .populate('userId', 'surname phone street')
       .populate('products.productId', 'name price')
     res.json(orders)
   } catch (err) {
@@ -22,7 +22,7 @@ exports.getMyOrder = async (req, res) => {
     // Знаходимо всі замовлення користувача, сортуємо за датою
     const orders = await Order.find({ userId })
       .sort({ createdAt: -1 })
-      .populate('userId', 'surname phone')
+      .populate('userId', 'surname phone street')
       .populate('products.productId', 'name price')
 
     // Повертаємо масив (може бути порожнім)
@@ -56,9 +56,11 @@ exports.create = async (req, res) => {
       })
     }
     await order.save()
+
     const populated = await Order.findById(order._id)
-      .populate('userId', 'surname phone')
+      .populate('userId', 'surname phone street')
       .populate('products.productId', 'name price')
+
     res.json(populated)
   } catch (err) {
     console.error('orderController.create error:', err)
@@ -73,7 +75,7 @@ exports.updateStatus = async (req, res) => {
       { status: req.body.status },
       { new: true }
     )
-      .populate('userId', 'surname phone')
+      .populate('userId', 'surname phone street')
       .populate('products.productId', 'name price')
     res.json(updated)
   } catch (err) {
@@ -103,8 +105,9 @@ exports.removeProduct = async (req, res) => {
       p => p.productId.toString() !== productId
     )
     await order.save()
+
     const updated = await Order.findById(orderId)
-      .populate('userId', 'surname phone')
+      .populate('userId', 'surname phone street')
       .populate('products.productId', 'name price')
     res.json(updated)
   } catch (err) {

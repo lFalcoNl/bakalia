@@ -46,3 +46,23 @@
     @apply overflow-x-auto w-full;
   }
 }
+@layer base {
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    .print-page,
+    .print-page * {
+      visibility: visible;
+    }
+    .print-page {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+    .print\\:hidden {
+      display: none !important;
+    }
+  }
+}
