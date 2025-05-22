@@ -1,31 +1,34 @@
-// backend/controllers/productController.js
-const Product = require('../models/Product')
-const Order = require('../models/Order')
+const Product = require('../models/Product');
+const Order = require('../models/Order');
 
-// Helper: build a data-URL from imageData + imageType
+// Збираємо imageData + imageType в data URL
 function toDataUrl({ imageData, imageType }) {
-  if (!imageData || !imageType) return null
-  return `data:${imageType};base64,${imageData}`
+  if (!imageData || !imageType) return null;
+  return `data:${imageType};base64,${imageData}`;
 }
 
 exports.getAll = async (req, res) => {
-  // parse & sanitize query params
-  const page = Math.max(1, parseInt(req.query.page, 10) || 1)
-  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20))
-  const skip = (page - 1) * limit
-
   try {
-    // run count + paged find in parallel
-    const [total, docs] = await Promise.all([
-      Product.countDocuments(),
-      Product.find()
-        .sort({ createdAt: -1 }) // uses the index
-        .skip(skip)
-        .limit(limit)
-        .lean()
-    ])
+    // Use an aggregation with allowDiskUse to avoid in-memory sort limits
+    const docs = await Product.aggregate(
+      [
+        { $sort: { createdAt: -1 } },
+        {
+          $project: {
+            name: 1,
+            price: 1,
+            category: 1,
+            minOrder: 1,
+            createdAt: 1,
+            imageData: 1,
+            imageType: 1
+          }
+        }
+      ],
+      { allowDiskUse: true }
+    )
 
-    const data = docs.map(p => ({
+    const result = docs.map(p => ({
       _id: p._id,
       name: p.name,
       price: p.price,
@@ -35,19 +38,12 @@ exports.getAll = async (req, res) => {
       image: toDataUrl(p)
     }))
 
-    res.json({
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-      data
-    })
+    res.json(result)
   } catch (err) {
     console.error('productController.getAll error:', err)
     res.status(500).json({ msg: 'Помилка отримання товарів' })
   }
-}
-
+};
 
 exports.create = async (req, res) => {
   try {
