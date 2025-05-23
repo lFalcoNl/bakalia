@@ -103,9 +103,23 @@ export default function ProductCard({ product }) {
               >
                 –
               </button>
-              <span className="w-10 h-10 flex items-center justify-center border-x">
-                {quantity}
-              </span>
+
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value)
+                  if (!isNaN(value) && value >= 0) {
+                    setQuantity(value)
+                  }
+                }}
+                className="w-16 h-10 text-center border-x outline-none
+             appearance-none
+             [&::-webkit-inner-spin-button]:appearance-none
+             [&::-webkit-outer-spin-button]:appearance-none
+             [-moz-appearance:textfield]"
+              />
+
               <button
                 onClick={() => changeQty(1)}
                 className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition"
@@ -113,6 +127,7 @@ export default function ProductCard({ product }) {
                 +
               </button>
             </div>
+
             <button
               onClick={handleAddToCart}
               className="ml-4 w-28 h-10 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition"
