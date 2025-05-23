@@ -106,18 +106,31 @@ export default function ProductCard({ product }) {
 
               <input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                min="0"
+                step="1"
                 value={quantity}
                 onChange={(e) => {
-                  const value = parseInt(e.target.value)
-                  if (!isNaN(value) && value >= 0) {
-                    setQuantity(value)
+                  const value = e.target.value
+                  // дозволяємо тільки пустий рядок або цілі числа
+                  if (value === '') {
+                    setQuantity('')
+                  } else if (/^\d+$/.test(value)) {
+                    setQuantity(parseInt(value))
+                  }
+                }}
+                onBlur={() => {
+                  // якщо залишено пустим — повертаємо хоча б 0
+                  if (quantity === '') {
+                    setQuantity(minOrder)
                   }
                 }}
                 className="w-16 h-10 text-center border-x outline-none
-             appearance-none
-             [&::-webkit-inner-spin-button]:appearance-none
-             [&::-webkit-outer-spin-button]:appearance-none
-             [-moz-appearance:textfield]"
+               appearance-none
+               [&::-webkit-inner-spin-button]:appearance-none
+               [&::-webkit-outer-spin-button]:appearance-none
+               [-moz-appearance:textfield]"
               />
 
               <button
@@ -127,6 +140,7 @@ export default function ProductCard({ product }) {
                 +
               </button>
             </div>
+
 
             <button
               onClick={handleAddToCart}
