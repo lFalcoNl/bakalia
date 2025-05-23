@@ -165,7 +165,7 @@ export default function AdminOrdersPage() {
             viewBox="0 0 24 24"
             stroke="currentColor"
             animate={ordersLoading ? { rotate: 360 } : { rotate: 0 }}
-            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+            transition={{ duration: 0.8, ease: 'linear' }}
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M23 4v6h-6" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1 20v-6h6" />
