@@ -1,7 +1,7 @@
 // backend/api/src/controllers/productController.js
 const Product = require('../models/Product');
 const Order = require('../models/Order');
-const cloudinary = require('../../config/cloudinary');
+const cloudinary = require('../config/cloudinary');
 const Busboy = require('busboy');
 
 // Helper: returns a Cloudinary upload stream
