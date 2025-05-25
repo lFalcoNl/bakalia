@@ -43,11 +43,10 @@ connectDB();
 // Health-check
 app.get('/', (_req, res) => res.send('API listening'));
 
-// Your routes (with /api prefix if you want)
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/products', require('./routes/products'));
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/users', require('./routes/users'));
+app.use('/auth', require('./routes/auth'));
+app.use('/products', require('./routes/products'));
+app.use('/orders', require('./routes/orders'));
+app.use('/users', require('./routes/users'));
 
 // Error handler
 app.use((err, _req, res, _next) => {
