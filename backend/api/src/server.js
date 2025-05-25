@@ -50,7 +50,7 @@ connectDB();
 
 // —––––– Routes
 app.get('/', (_req, res) => res.send('works'));
-app.get('', (_req, res) => res.send('API listening'));
+app.get('/works', (_req, res) => res.send('API listening'));
 app.use('/auth', require('./routes/auth'));
 app.use('/products', require('./routes/products'));
 app.use('/orders', require('./routes/orders'));
