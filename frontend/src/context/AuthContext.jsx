@@ -33,7 +33,8 @@ export function AuthProvider({ children }) {
 
     api.defaults.headers.common.Authorization = `Bearer ${token}`
 
-    api.get('/auth/me')
+    api
+      .get('/auth/me', { withCredentials: true })
       .then(({ data }) => {
         setUser(data.user)
       })
@@ -47,7 +48,7 @@ export function AuthProvider({ children }) {
 
   // Інтерцептор для 401
   useEffect(() => {
-    const id = api.interceptors.response.use(
+    const interceptorId = api.interceptors.response.use(
       resp => resp,
       err => {
         if (err.response?.status === 401) {
@@ -56,12 +57,16 @@ export function AuthProvider({ children }) {
         return Promise.reject(err)
       }
     )
-    return () => api.interceptors.response.eject(id)
+    return () => api.interceptors.response.eject(interceptorId)
   }, [logout])
 
   // Функція логіну
   const login = async (phone, password) => {
-    const { data } = await api.post('/auth/login', { phone, password })
+    const { data } = await api.post(
+      '/auth/login',
+      { phone, password },
+      { withCredentials: true }
+    )
     const { token, user: payload } = data
 
     localStorage.setItem('token', token)
@@ -72,12 +77,16 @@ export function AuthProvider({ children }) {
     return payload
   }
 
-  // Функція реєстрації (приймає об’єкт)
-  const register = ({ surname, street, phone, password }) => {
-    return api.post('/auth/register', { surname, street, phone, password })
+  // Функція реєстрації
+  const register = (userInfo) => {
+    return api.post(
+      '/auth/register',
+      userInfo,
+      { withCredentials: true }
+    )
   }
 
-  // Поки перевіряємо token – нічого не рендеримо
+  // Поки перевіряємо токен – нічого не рендеримо
   if (loading) return null
 
   return (
