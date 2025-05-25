@@ -2,7 +2,7 @@
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const cloudinary = require('../config/cloudinary');
-const { Busboy } = require('busboy');
+const Busboy = require('busboy');  // ← import the constructor directly
 
 // GET all products
 exports.getAll = async (req, res) => {
@@ -43,22 +43,19 @@ async function handleUpsert(req, res, isUpdate) {
         fileStream.pipe(uploadStream);
       });
     } else {
-      // ignore other files
       fileStream.resume();
     }
   });
 
-  // Pipe the request into Busboy, then wait for it to finish
+  // Pipe request into Busboy, then wait for parsing to finish
   req.pipe(bb);
   await new Promise(resolve => bb.on('finish', resolve));
 
   try {
-    // If an image was uploaded, wait for its URL
     if (imagePromise) {
       fields.image = await imagePromise;
     }
 
-    // Build the data object
     const data = {
       name: fields.name,
       price: Number(fields.price),
@@ -101,7 +98,7 @@ exports.remove = async (req, res) => {
       return res.status(404).json({ msg: 'Товар не знайдено' });
     }
 
-    // Remove image from Cloudinary if set
+    // Remove Cloudinary image if present
     if (prod.image) {
       const parts = prod.image.split('/');
       const filename = parts.pop();           // e.g. "1623456789012.jpg"
@@ -110,14 +107,14 @@ exports.remove = async (req, res) => {
       await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
     }
 
-    // Clean up any orders referencing this product
+    // Remove references in orders
     await Order.updateMany(
       { 'products.productId': prod._id },
       { $pull: { products: { productId: prod._id } } }
     );
     await Order.deleteMany({ products: { $size: 0 } });
 
-    // Finally, delete the product document
+    // Delete the product
     await prod.deleteOne();
     res.json({ msg: 'Товар і зображення видалені' });
   } catch (err) {
