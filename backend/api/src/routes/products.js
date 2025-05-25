@@ -4,9 +4,31 @@ const auth = require('../middleware/auth');
 const roles = require('../middleware/roles');
 const ctrl = require('../controllers/productController');
 
+// Public: list products
 router.get('/', ctrl.getAll);
-router.post('/', auth, roles('admin'), ctrl.create);
-router.put('/:id', auth, roles('admin'), ctrl.update);
-router.delete('/:id', auth, roles('admin'), ctrl.remove);
+
+// Admin: create product with optional image upload
+router.post(
+    '/',
+    auth,
+    roles('admin'),
+    ctrl.create
+);
+
+// Admin: update product and image
+router.put(
+    '/:id',
+    auth,
+    roles('admin'),
+    ctrl.update
+);
+
+// Admin: delete product and its image
+router.delete(
+    '/:id',
+    auth,
+    roles('admin'),
+    ctrl.remove
+);
 
 module.exports = router;
