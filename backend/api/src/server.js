@@ -1,48 +1,57 @@
 // api/server.js
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
 const connectDB = require('./config/db');
 
 const app = express();
 
-// Whitelist
+// Whitelist of allowed origins
 const allowed = new Set([
-  process.env.FRONTEND_URL,    // e.g. "https://bakalia.vercel.app"
+  process.env.FRONTEND_URL,     // e.g. "https://bakalia.vercel.app"
   'http://localhost:5173'
 ]);
 
-// Debug
+// Debug: log every origin
 app.use((req, _res, next) => {
-  console.log('→ Origin:', req.headers.origin);
+  console.log('→ Origin header:', req.headers.origin);
   next();
 });
 
-// CORS options
-const corsOptions = {
-  origin(origin, cb) {
-    if (!origin) return cb(null, true);
-    if (allowed.has(origin)) return cb(null, true);
-    console.error(`Blocked CORS origin: ${origin}`);
-    return cb(new Error('Not allowed by CORS'), false);
-  },
-  credentials: true,
-  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
+// Manual CORS middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  // Allow if no origin (curl, Postman) or origin is whitelisted
+  if (!origin || allowed.has(origin)) {
+    // echo the origin back (or ‘*’ if you prefer)
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+  // Always set these
+  res.header(
+    'Access-Control-Allow-Methods',
+    'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS'
+  );
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization'
+  );
 
-// Apply CORS to all requests **and** to preflight
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));  // <— use the same corsOptions here
+  // Preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 // Body parsing & DB
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ limit: '20mb', extended: true }));
 connectDB();
 
-// Health-check
+// Health‐check
 app.get('/', (_req, res) => res.send('API listening'));
 
+// Mount your routes (no extra /api prefix)
 app.use('/auth', require('./routes/auth'));
 app.use('/products', require('./routes/products'));
 app.use('/orders', require('./routes/orders'));
