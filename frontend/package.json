@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "axios": "^1.4.0",
     "dayjs": "^1.11.13",
     "framer-motion": "^12.12.1",

@@ -219,7 +219,7 @@ export default function AdminProductsPage() {
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
-              initial={false}
+              initial={{ rotate: 0 }}
               animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
               transition={{ duration: 0.8, ease: 'linear' }}
             >

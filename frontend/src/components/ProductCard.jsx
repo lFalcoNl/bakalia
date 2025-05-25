@@ -3,6 +3,8 @@ import { AuthContext } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { useNotification } from '../context/NotificationContext'
 import CollapsibleText from './CollapsibleText'
+// Імпортуємо іконки
+import { ShoppingCartIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
 export default function ProductCard({ product }) {
   const minOrder = product.minOrder || 1
@@ -23,9 +25,8 @@ export default function ProductCard({ product }) {
     setQuantity(existing ? existing.quantity : minOrder)
   }, [existing, minOrder])
 
-  const changeQty = delta => {
+  const changeQty = delta =>
     setQuantity(prev => Math.max(minOrder, prev + delta))
-  }
 
   const handleAddToCart = () => {
     if (!user) {
@@ -43,6 +44,7 @@ export default function ProductCard({ product }) {
       addItem(product, quantity)
       addNotification('Товар додано до кошика')
     }
+
     setShowModal(true)
     setTimeout(() => setShowModal(false), 2000)
   }
@@ -58,8 +60,8 @@ export default function ProductCard({ product }) {
 
   return (
     <>
-      <div className="relative bg-white border rounded-lg overflow-hidden flex flex-col h-[32rem] w-full sm:w-64 md:w-72 hover:shadow-lg transition-shadow duration-200">
-        {/* 1. Зображення */}
+      <div className="relative bg-white border rounded-lg overflow-hidden flex flex-col h-full w-full hover:shadow-lg transition-shadow duration-200">
+        {/* Зображення */}
         <div
           className="w-full aspect-square cursor-pointer overflow-hidden"
           onClick={openZoom}
@@ -76,8 +78,8 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* 2. Назва */}
-        <div className="p-4 flex-shrink-0 min-h-[5rem]">
+        {/* Назва */}
+        <div className="p-4 flex-shrink-0">
           <CollapsibleText
             text={product.name}
             maxChars={80}
@@ -87,23 +89,21 @@ export default function ProductCard({ product }) {
           />
         </div>
 
-        {/* 3. Ціна + контролери в одному блоці, прокладається внизу */}
+        {/* Ціна + контролери */}
         <div className="mt-auto px-4 pb-4 flex flex-col space-y-2">
-          {/* Ціна прямо над лічильником */}
-          <p className="text-green-600 font-bold text-lg text-end">
+          <p className="text-green-600 font-bold text-lg text-right">
             {product.price} ₴
           </p>
 
-          {/* Лічильник + кнопка */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center border rounded-md overflow-hidden">
+            {/* Лічильник */}
+            <div className="flex-shrink-0 flex items-center border rounded-md overflow-hidden">
               <button
                 onClick={() => changeQty(-1)}
-                className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition"
+                className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 transition"
               >
                 –
               </button>
-
               <input
                 type="number"
                 inputMode="numeric"
@@ -111,42 +111,35 @@ export default function ProductCard({ product }) {
                 min="0"
                 step="1"
                 value={quantity}
-                onChange={(e) => {
-                  const value = e.target.value
-                  // дозволяємо тільки пустий рядок або цілі числа
-                  if (value === '') {
-                    setQuantity('')
-                  } else if (/^\d+$/.test(value)) {
-                    setQuantity(parseInt(value))
-                  }
+                onChange={e => {
+                  const v = e.target.value
+                  if (v === '') setQuantity('')
+                  else if (/^\d+$/.test(v)) setQuantity(+v)
                 }}
                 onBlur={() => {
-                  // якщо залишено пустим — повертаємо хоча б 0
-                  if (quantity === '') {
-                    setQuantity(minOrder)
-                  }
+                  if (quantity === '') setQuantity(minOrder)
                 }}
-                className="w-16 h-10 text-center border-x outline-none
-               appearance-none
-               [&::-webkit-inner-spin-button]:appearance-none
-               [&::-webkit-outer-spin-button]:appearance-none
-               [-moz-appearance:textfield]"
+                className="w-12 h-8 text-center border-x outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
               />
-
               <button
                 onClick={() => changeQty(1)}
-                className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition"
+                className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 transition"
               >
                 +
               </button>
             </div>
 
-
+            {/* Іконка корзини без тексту */}
             <button
               onClick={handleAddToCart}
-              className="ml-4 w-28 h-10 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition"
+              aria-label={existing ? 'Оновити кошик' : 'Додати до кошика'}
+              className="ml-4 flex-shrink-0 w-10 h-10 bg-green-600 hover:bg-green-700 transition flex items-center justify-center text-white rounded-full"
             >
-              {existing ? 'Оновити' : 'До кошика'}
+              {existing ? (
+                <ArrowPathIcon className="w-6 h-6" />
+              ) : (
+                <ShoppingCartIcon className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>

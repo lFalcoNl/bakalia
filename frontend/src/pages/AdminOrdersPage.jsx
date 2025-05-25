@@ -164,6 +164,7 @@ export default function AdminOrdersPage() {
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            initial={{ rotate: 0 }}
             animate={ordersLoading ? { rotate: 360 } : { rotate: 0 }}
             transition={{ duration: 0.8, ease: 'linear' }}
           >
