@@ -45,7 +45,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ msg: 'Внутрішня помилка сервера' })
 })
 
-// —––– Коментуємо, бо на Vercel Serverless ця частина не потрібна
 // const PORT = process.env.PORT || 5000
 // app.listen(PORT, () => console.log(`Server started on port ${PORT}`))
 
