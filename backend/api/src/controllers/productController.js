@@ -1,13 +1,13 @@
 // backend/api/src/controllers/productController.js
 const Product = require('../models/Product');
 const Order = require('../models/Order');
-const cloudinary = require('../config/cloudinary');
+const cloudinary = require('../../config/cloudinary');
 const Busboy = require('busboy');
 
 // Helper: returns a Cloudinary upload stream
 function getUploadStream(publicId) {
   return cloudinary.uploader.upload_stream(
-    { folder: 'products', public_id: publicId },
+    { folder: 'products', public_id: publicId, resource_type: 'image' },
     (error, result) => {
       if (error) throw error;
       return result;
@@ -15,17 +15,20 @@ function getUploadStream(publicId) {
   );
 }
 
-// Shared handler for create and update
+// Unified handler for both create and update operations
 async function handleProductUpsert(req, res, isUpdate = false) {
   try {
     let fields = {};
     let imagePromise = null;
+    const contentType = req.headers['content-type'] || '';
+    const isMultipart = contentType.includes('multipart/form-data');
 
-    // If JSON request (no file)
-    if (!req.is('multipart/form-data')) {
-      fields = req.body;
+    if (!isMultipart) {
+      // JSON body: only scalar fields
+      const { name, price, category, minOrder } = req.body;
+      fields = { name, price, category, minOrder };
     } else {
-      // Parse multipart form-data with Busboy
+      // multipart/form-data: parse with Busboy
       const bb = Busboy({ headers: req.headers });
       bb.on('field', (name, val) => { fields[name] = val; });
       bb.on('file', (name, stream) => {
@@ -37,10 +40,12 @@ async function handleProductUpsert(req, res, isUpdate = false) {
             uploadStream.on('finish', resolve);
             uploadStream.on('error', reject);
           });
-        } else stream.resume();
+        } else {
+          stream.resume();
+        }
       });
 
-      await new Promise((resolve) => {
+      await new Promise(resolve => {
         bb.on('finish', resolve);
         req.pipe(bb);
       });
@@ -53,13 +58,16 @@ async function handleProductUpsert(req, res, isUpdate = false) {
       }
     }
 
+    // Build data payload
     const data = {
       name: fields.name,
       price: Number(fields.price),
       category: fields.category,
       minOrder: Number(fields.minOrder)
     };
-    if (fields.image) data.image = fields.image;
+    if (fields.image && typeof fields.image === 'string') {
+      data.image = fields.image;
+    }
 
     let prod;
     if (isUpdate) {
@@ -69,55 +77,50 @@ async function handleProductUpsert(req, res, isUpdate = false) {
         { new: true, runValidators: true }
       );
       if (!prod) return res.status(404).json({ msg: 'Товар не знайдено' });
+      return res.json(prod);
     } else {
       prod = await new Product(data).save();
-      res.status(201).json(prod);
-      return;
+      return res.status(201).json(prod);
     }
-
-    res.json(prod);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ msg: isUpdate ? 'Помилка оновлення товару' : 'Помилка створення товару' });
+    const msg = isUpdate ? 'Помилка оновлення товару' : 'Помилка створення товару';
+    return res.status(500).json({ msg });
   }
 }
 
-// GET /api/products
+// Controller methods
 exports.getAll = async (req, res) => {
   try {
-    const docs = await Product.find().sort({ createdAt: -1 });
-    res.json(docs);
+    const products = await Product.find().sort({ createdAt: -1 });
+    res.json(products);
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Помилка отримання товарів' });
   }
 };
 
-// CREATE /api/products
 exports.create = (req, res) => handleProductUpsert(req, res, false);
-
-// UPDATE /api/products/:id
 exports.update = (req, res) => handleProductUpsert(req, res, true);
 
-// DELETE /api/products/:id
 exports.remove = async (req, res) => {
   try {
     const prod = await Product.findById(req.params.id);
     if (!prod) return res.status(404).json({ msg: 'Товар не знайдено' });
 
-    // Remove image from Cloudinary if exists
+    // Delete image from Cloudinary
     if (prod.image) {
       await cloudinary.uploader.destroy(prod.image, { resource_type: 'image' });
     }
 
-    // Cleanup orders
+    // Clean up orders
     await Order.updateMany(
       { 'products.productId': prod._id },
       { $pull: { products: { productId: prod._id } } }
     );
     await Order.deleteMany({ products: { $size: 0 } });
 
-    await prod.remove();
+    await prod.deleteOne();
     res.json({ msg: 'Товар і зображення видалені' });
   } catch (err) {
     console.error(err);
