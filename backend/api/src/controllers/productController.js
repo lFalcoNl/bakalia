@@ -27,7 +27,7 @@ async function handleUpsert(req, res, isUpdate = false) {
     fields = req.body;
   } else {
     // multipart/form-data → parse with Busboy
-    const bb = new Busboy({ headers: req.headers });
+    const bb = Busboy({ headers: req.headers });
     bb.on('field', (name, val) => {
       fields[name] = val;
     });
