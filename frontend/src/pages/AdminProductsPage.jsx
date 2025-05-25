@@ -15,10 +15,10 @@ export default function AdminProductsPage() {
   const [productsLoading, setProductsLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
-  // пошук
+  // Search filter
   const [search, setSearch] = useState('')
 
-  // форма додавання
+  // Add‐form state
   const [form, setForm] = useState({
     name: '',
     price: '',
@@ -27,11 +27,12 @@ export default function AdminProductsPage() {
   })
   const [file, setFile] = useState(null)
 
-  // редагування
+  // Edit‐form state
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
+  const [editFile, setEditFile] = useState(null)
 
-  // початкове завантаження
+  // Initial load
   useEffect(() => {
     setProductsLoading(true)
     api.get('/products')
@@ -40,7 +41,7 @@ export default function AdminProductsPage() {
       .finally(() => setProductsLoading(false))
   }, [addNotification])
 
-  // ручне оновлення
+  // Manual refresh
   const refreshProducts = async () => {
     setRefreshing(true)
     try {
@@ -53,7 +54,7 @@ export default function AdminProductsPage() {
     }
   }
 
-  // додати товар
+  // Add a product
   const handleAdd = async e => {
     e.preventDefault()
     try {
@@ -61,6 +62,7 @@ export default function AdminProductsPage() {
       Object.entries(form).forEach(([k, v]) => body.append(k, v))
       if (file) body.append('image', file)
 
+      // Axios auto‐detects FormData → multipart/form-data
       const { data: newProd } = await api.post('/products', body)
       setProducts([newProd, ...products])
       setForm({ name: '', price: '', category: categories[0].name, minOrder: 1 })
@@ -71,9 +73,9 @@ export default function AdminProductsPage() {
     }
   }
 
-  // видалити товар
+  // Delete a product
   const deleteProduct = async id => {
-    if (!confirm('Видалити товар?')) return
+    if (!window.confirm('Видалити товар?')) return
     try {
       await api.delete(`/products/${id}`)
       setProducts(products.filter(p => p._id !== id))
@@ -83,7 +85,7 @@ export default function AdminProductsPage() {
     }
   }
 
-  // редагувати товар
+  // Begin editing
   const startEdit = p => {
     setEditingId(p._id)
     setEditForm({
@@ -92,18 +94,23 @@ export default function AdminProductsPage() {
       category: p.category,
       minOrder: p.minOrder
     })
+    setEditFile(null)
   }
   const cancelEdit = () => setEditingId(null)
   const handleEditChange = e => {
     const { name, value } = e.target
     setEditForm(prev => ({ ...prev, [name]: value }))
   }
+
+  // Save edits
   const saveEdit = async id => {
     try {
       const body = new FormData()
       Object.entries(editForm).forEach(([k, v]) => body.append(k, v))
+      if (editFile) body.append('image', editFile)
+
       const { data: updated } = await api.put(`/products/${id}`, body)
-      setProducts(products.map(p => p._id === id ? updated : p))
+      setProducts(products.map(p => (p._id === id ? updated : p)))
       setEditingId(null)
       addNotification('Товар оновлено')
     } catch {
@@ -111,7 +118,7 @@ export default function AdminProductsPage() {
     }
   }
 
-  // сортування
+  // Sorting
   const [sortConfig, setSortConfig] = useState({ key: 'updatedAt', direction: 'desc' })
   const requestSort = key => {
     setSortConfig(prev =>
@@ -124,7 +131,6 @@ export default function AdminProductsPage() {
     sortConfig.key === key
       ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼')
       : ''
-
   const sortedProducts = useMemo(() => {
     const arr = [...products]
     arr.sort((a, b) => {
@@ -150,7 +156,7 @@ export default function AdminProductsPage() {
     return arr
   }, [products, sortConfig])
 
-  // фільтрація пошуку
+  // Search filter
   const displayed = useMemo(() => {
     if (!search.trim()) return sortedProducts
     return sortedProducts.filter(p =>
@@ -160,69 +166,33 @@ export default function AdminProductsPage() {
 
   return (
     <div className="p-4 flex flex-col min-h-screen">
-      {/* HEADER: Заголовок + Refresh + Print */}
+      {/* HEADER */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Управління товарами</h1>
         <div className="flex items-center space-x-2">
           <button
             onClick={() => navigate('/admin/print')}
             aria-label="Переглянути друковану таблицю"
-            className="
-    inline-flex items-center justify-center
-    bg-blue-600 hover:bg-blue-700
-    text-white rounded-full p-2 focus:outline-none
-  "
+            className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-6 h-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              {/* Верхня частина принтера */}
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 9V2h12v7"
-              />
-              {/* Корпус принтера */}
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"
-              />
-              {/* Лоток паперу */}
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 14h12"
-              />
+            {/* printer icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 9V2h12v7" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 14h12" />
             </svg>
           </button>
-
-          {/* Refresh */}
           <button
             onClick={refreshProducts}
             disabled={refreshing}
             aria-label="Оновити товари"
-            className="
-              inline-flex items-center justify-center
-              bg-green-600 hover:bg-green-700 disabled:opacity-50
-              text-white rounded-full p-2 focus:outline-none
-            "
+            className="inline-flex items-center justify-center bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-full p-2"
           >
-            <motion.svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-6 h-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              initial={{ rotate: 0 }}
+            <motion.svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" initial={{ rotate: 0 }}
               animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
-              transition={{ duration: 0.8, ease: 'linear' }}
-            >
+              transition={{ duration: 0.8, ease: 'linear', repeat: Infinity }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M23 4v6h-6 M1 20v-6h6 M3.51 9a9 9 0 0114.36-3.36 M20.49 15a9 9 0 01-14.36 3.36" />
             </motion.svg>
@@ -230,10 +200,9 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* ФОРМА ДОДАВАННЯ */}
+      {/* ADD FORM */}
       <form onSubmit={handleAdd}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
-      >
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <input
           name="name"
           value={form.name}
@@ -284,13 +253,13 @@ export default function AdminProductsPage() {
         </button>
       </form>
 
-      {/* ПОШУК */}
+      {/* SEARCH */}
       <input
         type="text"
         placeholder="Пошук за назвою…"
         value={search}
         onChange={e => setSearch(e.target.value)}
-        className="mb-4 w-full border p-2 rounded focus:outline-none"
+        className="mb-4 w-full border p-2 rounded"
       />
 
       {/* TABLE OR LOADER */}
@@ -309,21 +278,16 @@ export default function AdminProductsPage() {
             <thead className="bg-gray-100 text-gray-700">
               <tr>
                 <th className="p-2">Фото</th>
-                <th onClick={() => requestSort('name')} className="p-2 cursor-pointer">
-                  Назва{getSortIndicator('name')}
-                </th>
-                <th onClick={() => requestSort('category')} className="p-2 cursor-pointer">
-                  Категорія{getSortIndicator('category')}
-                </th>
-                <th onClick={() => requestSort('price')} className="p-2 text-right cursor-pointer">
-                  Ціна{getSortIndicator('price')}
-                </th>
-                <th onClick={() => requestSort('minOrder')} className="p-2 text-center cursor-pointer">
-                  Мін. кількість{getSortIndicator('minOrder')}
-                </th>
-                <th onClick={() => requestSort('updatedAt')} className="p-2 cursor-pointer">
-                  Оновлено{getSortIndicator('updatedAt')}
-                </th>
+                <th onClick={() => requestSort('name')}
+                  className="p-2 cursor-pointer">Назва{getSortIndicator('name')}</th>
+                <th onClick={() => requestSort('category')}
+                  className="p-2 cursor-pointer">Категорія{getSortIndicator('category')}</th>
+                <th onClick={() => requestSort('price')}
+                  className="p-2 text-right cursor-pointer">Ціна{getSortIndicator('price')}</th>
+                <th onClick={() => requestSort('minOrder')}
+                  className="p-2 text-center cursor-pointer">Мін. кількість{getSortIndicator('minOrder')}</th>
+                <th onClick={() => requestSort('updatedAt')}
+                  className="p-2 cursor-pointer">Оновлено{getSortIndicator('updatedAt')}</th>
                 <th className="p-2">Дія</th>
               </tr>
             </thead>
@@ -333,11 +297,19 @@ export default function AdminProductsPage() {
                 return (
                   <tr key={p._id} className="border-t hover:bg-gray-50">
                     <td className="p-2">
-                      <img
-                        src={p.image || '/images/placeholder.png'}
-                        alt={p.name}
-                        className="h-8 w-8 object-cover rounded"
-                      />
+                      {isEditing ? (
+                        <input
+                          type="file"
+                          onChange={e => setEditFile(e.target.files[0])}
+                          className="border p-1 rounded"
+                        />
+                      ) : (
+                        <img
+                          src={p.image || '/images/placeholder.png'}
+                          alt={p.name}
+                          className="h-8 w-8 object-cover rounded"
+                        />
+                      )}
                     </td>
                     <td className="p-2">
                       {isEditing ? (
@@ -360,9 +332,7 @@ export default function AdminProductsPage() {
                           className="border p-1 rounded w-full"
                         >
                           {categories.map(c => (
-                            <option key={c.name} value={c.name}>
-                              {c.name}
-                            </option>
+                            <option key={c.name} value={c.name}>{c.name}</option>
                           ))}
                         </select>
                       ) : (
@@ -404,13 +374,13 @@ export default function AdminProductsPage() {
                         <>
                           <button
                             onClick={() => saveEdit(p._id)}
-                            className="bg-blue-600 my-2 text-white px-2 py-1 rounded hover:bg-blue-700 transition"
+                            className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition"
                           >
                             Зберегти
                           </button>
                           <button
                             onClick={cancelEdit}
-                            className="bg-gray-400 my-2 text-white px-2 py-1 rounded hover:bg-gray-500 transition"
+                            className="bg-gray-400 text-white px-2 py-1 rounded hover:bg-gray-500 transition"
                           >
                             Відмінити
                           </button>
@@ -419,13 +389,13 @@ export default function AdminProductsPage() {
                         <>
                           <button
                             onClick={() => startEdit(p)}
-                            className="bg-yellow-500 my-2 text-white px-2 py-1 rounded hover:bg-yellow-600 transition"
+                            className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition"
                           >
                             Редагувати
                           </button>
                           <button
                             onClick={() => deleteProduct(p._id)}
-                            className="bg-red-500 my-2 text-white px-2 py-1 rounded hover:bg-red-600 transition"
+                            className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition"
                           >
                             Видалити
                           </button>
