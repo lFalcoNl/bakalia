@@ -2,7 +2,7 @@
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const cloudinary = require('../config/cloudinary');
-const Busboy = require('busboy');
+const { Busboy } = require('busboy');
 
 // GET all products
 exports.getAll = async (req, res) => {
@@ -16,7 +16,7 @@ exports.getAll = async (req, res) => {
 };
 
 // CREATE / UPDATE helper
-async function handleUpsert(req, res, isUpdate = false) {
+async function handleUpsert(req, res, isUpdate) {
   const bb = new Busboy({ headers: req.headers });
   const fields = {};
   let imagePromise = null;
@@ -43,29 +43,29 @@ async function handleUpsert(req, res, isUpdate = false) {
         fileStream.pipe(uploadStream);
       });
     } else {
+      // ignore other files
       fileStream.resume();
     }
   });
 
-  // Wait until Busboy parsing is done
-  await new Promise(resolve => bb.on('finish', resolve) && req.pipe(bb));
+  // Pipe the request into Busboy, then wait for it to finish
+  req.pipe(bb);
+  await new Promise(resolve => bb.on('finish', resolve));
 
   try {
-    // If there was an image, wait for its URL
+    // If an image was uploaded, wait for its URL
     if (imagePromise) {
       fields.image = await imagePromise;
     }
 
-    // Build product data
+    // Build the data object
     const data = {
       name: fields.name,
       price: Number(fields.price),
       category: fields.category,
       minOrder: Number(fields.minOrder)
     };
-    if (fields.image) {
-      data.image = fields.image;
-    }
+    if (fields.image) data.image = fields.image;
 
     let product;
     if (isUpdate) {
@@ -93,7 +93,7 @@ async function handleUpsert(req, res, isUpdate = false) {
 exports.create = (req, res) => handleUpsert(req, res, false);
 exports.update = (req, res) => handleUpsert(req, res, true);
 
-// DELETE a product (and its image + clean orders)
+// DELETE a product, its Cloudinary image, and clean up orders
 exports.remove = async (req, res) => {
   try {
     const prod = await Product.findById(req.params.id);
@@ -101,24 +101,23 @@ exports.remove = async (req, res) => {
       return res.status(404).json({ msg: 'Товар не знайдено' });
     }
 
-    // Delete image from Cloudinary if present
+    // Remove image from Cloudinary if set
     if (prod.image) {
-      // derive public_id from secure_url
       const parts = prod.image.split('/');
-      const filename = parts.pop();              // e.g. "1623456789012.jpg"
-      const folder = parts.pop();              // should be "products"
+      const filename = parts.pop();           // e.g. "1623456789012.jpg"
+      const folder = parts.pop();           // should be "products"
       const publicId = `${folder}/${filename.split('.').shift()}`;
       await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
     }
 
-    // Remove references in orders
+    // Clean up any orders referencing this product
     await Order.updateMany(
       { 'products.productId': prod._id },
       { $pull: { products: { productId: prod._id } } }
     );
     await Order.deleteMany({ products: { $size: 0 } });
 
-    // Delete the product
+    // Finally, delete the product document
     await prod.deleteOne();
     res.json({ msg: 'Товар і зображення видалені' });
   } catch (err) {
