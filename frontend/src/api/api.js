@@ -2,7 +2,11 @@ import axios from 'axios'
 import { notify } from '../utils/notificationService'
 
 const api = axios.create({
-  baseURL: __BACKEND_URL__
+  baseURL: __BACKEND_URL__,
+  withCredentials: true,                  // include cookies / credentials
+  headers: {
+    'Content-Type': 'application/json'
+  }
 })
 
 api.interceptors.request.use(config => {
