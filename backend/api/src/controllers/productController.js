@@ -21,7 +21,7 @@ exports.getAll = async (req, res) => {
 // CREATE / UPDATE helper
 async function handleUpsert(req, res, isUpdate) {
   // Instantiate Busboy properly
-  const bb = new Busboy({ headers: req.headers });
+  const bb = Busboy({ headers: req.headers });
   const fields = {};
   let imagePromise = null;
 
