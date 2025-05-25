@@ -50,11 +50,11 @@ connectDB();
 
 // —––––– Routes
 app.get('/', (_req, res) => res.send('works'));
-app.get('/api', (_req, res) => res.send('API listening'));
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/products', require('./routes/products'));
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/users', require('./routes/users'));
+app.get('', (_req, res) => res.send('API listening'));
+app.use('/auth', require('./routes/auth'));
+app.use('/products', require('./routes/products'));
+app.use('/orders', require('./routes/orders'));
+app.use('/users', require('./routes/users'));
 
 // —––––– Error handler
 app.use((err, _req, res, _next) => {
