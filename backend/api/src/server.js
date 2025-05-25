@@ -6,56 +6,57 @@ const connectDB = require('./config/db');
 
 const app = express();
 
-// —––––– Whitelist of allowed origins
+// Whitelist
 const allowed = new Set([
-  process.env.FRONTEND_URL,     // e.g. "https://bakalia.vercel.app"
+  process.env.FRONTEND_URL,    // e.g. "https://bakalia.vercel.app"
   'http://localhost:5173'
 ]);
 
-// —––––– Debug incoming Origin
+// Debug
 app.use((req, _res, next) => {
-  console.log('→ Incoming Origin:', req.headers.origin);
+  console.log('→ Origin:', req.headers.origin);
   next();
 });
 
-// —––––– CORS setup
-app.use(cors({
-  origin(origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowed.has(origin)) return callback(null, true);
+// CORS options
+const corsOptions = {
+  origin(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (allowed.has(origin)) return cb(null, true);
     console.error(`Blocked CORS origin: ${origin}`);
-    return callback(null, false);
+    return cb(new Error('Not allowed by CORS'), false);
   },
   credentials: true,
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.options('*', cors());
+};
 
-// —––––– Body parsing
+// Apply CORS to all requests **and** to preflight
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));  // <— use the same corsOptions here
+
+// Body parsing & DB
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ limit: '20mb', extended: true }));
-
-// —––––– Connect to DB
 connectDB();
 
-// —––––– Health-check
+// Health-check
 app.get('/', (_req, res) => res.send('API listening'));
 
-// —––––– API routes (no “/api” prefix here)
-app.use('/auth', require('./routes/auth'));
-app.use('/products', require('./routes/products'));
-app.use('/orders', require('./routes/orders'));
-app.use('/users', require('./routes/users'));
+// Your routes (with /api prefix if you want)
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/products', require('./routes/products'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/users', require('./routes/users'));
 
-// —––––– Error handler
+// Error handler
 app.use((err, _req, res, _next) => {
   if (err.code === 11000) {
     const field = Object.keys(err.keyPattern)[0];
-    return res.status(400).json({ msg: `"${field}" має бути унікальним` });
+    return res.status(400).json({ msg: `"${field}" must be unique` });
   }
   console.error(err);
-  res.status(500).json({ msg: 'Внутрішня помилка сервера' });
+  res.status(500).json({ msg: 'Internal server error' });
 });
 
 module.exports = app;
