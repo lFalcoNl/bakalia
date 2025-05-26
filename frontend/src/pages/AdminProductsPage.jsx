@@ -305,7 +305,7 @@ export default function AdminProductsPage() {
                         />
                       ) : (
                         <img
-                          src={p.image || '/images/placeholder.png'}
+                            src={p.image || '/images/categories/nophoto.png'}
                           alt={p.name}
                           className="h-8 w-8 object-cover rounded"
                         />
