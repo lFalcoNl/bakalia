@@ -37,9 +37,9 @@ export default function AdminUsersPage() {
 
   const computeDays = u => {
     if (u.role === 'admin') return Infinity
-    const expiry = dayjs(u.createdAt).add(7, 'day')
-    return Math.max(0, expiry.diff(dayjs(), 'day'))
+    return Math.max(0, dayjs().diff(dayjs(u.createdAt), 'day'))
   }
+  
 
   // 1) filter by searchTerm
   const filtered = useMemo(() => {

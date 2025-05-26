@@ -305,7 +305,7 @@ export default function AdminOrdersPage() {
                     </button>
                   </div>
                   <div className="mb-2 font-semibold">{userInfo}</div>
-                  <ul className="mb-2 text-sm text-gray-700 space-y-1 max-h-40 overflow-y-auto">
+                  <ul className="mb-2 text-sm text-gray-700 space-y-1">
                     {o.products.map((p, i) => {
                       const name = p.product?.name || p.productId?.name || '—'
                       const prodId = p.product?._id || p.productId?._id
