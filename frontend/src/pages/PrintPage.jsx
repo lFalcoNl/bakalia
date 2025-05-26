@@ -1,5 +1,5 @@
-// frontend/src/pages/PrintPage.jsx
 import React, { useEffect, useState, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import api from '../api/api'
 import { useNavigate } from 'react-router-dom'
 
@@ -7,35 +7,36 @@ export default function PrintPage() {
     const navigate = useNavigate()
 
     const [products, setProducts] = useState([])
+    const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
     const [sortConfig, setSortConfig] = useState({
         key: 'category',
         direction: 'ascending'
     })
 
-    // Налаштування розміру тексту
     const sizeOptions = ['text-xs', 'text-sm', 'text-base', 'text-lg']
-    const [sizeIndex, setSizeIndex] = useState(1) // 'text-sm' за замовчуванням
+    const [sizeIndex, setSizeIndex] = useState(1)
     const textSizeClass = sizeOptions[sizeIndex]
     const decreaseSize = () => sizeIndex > 0 && setSizeIndex(i => i - 1)
     const increaseSize = () =>
         sizeIndex < sizeOptions.length - 1 && setSizeIndex(i => i + 1)
 
     useEffect(() => {
-        api
-            .get('/products')
+        setLoading(true)
+        api.get('/products')
             .then(({ data }) => setProducts(data))
             .catch(console.error)
+            .finally(() => setLoading(false))
     }, [])
 
-    // Сортування
     const sortedProducts = useMemo(() => {
         const arr = [...products]
         arr.sort((a, b) => {
             let aKey = a[sortConfig.key]
             let bKey = b[sortConfig.key]
             if (sortConfig.key === 'price' || sortConfig.key === 'minOrder') {
-                aKey = aKey ?? 0; bKey = bKey ?? 0
+                aKey = aKey ?? 0
+                bKey = bKey ?? 0
                 return sortConfig.direction === 'ascending'
                     ? aKey - bKey
                     : bKey - aKey
@@ -47,7 +48,6 @@ export default function PrintPage() {
         return arr
     }, [products, sortConfig])
 
-    // Фільтрація
     const filteredProducts = useMemo(() => {
         if (!searchTerm.trim()) return sortedProducts
         const term = searchTerm.toLowerCase()
@@ -77,8 +77,15 @@ export default function PrintPage() {
         )
 
     return (
-        <div className="print-page p-4">
-            {/* Налаштування та пошук — не видно в друці */}
+        <div className="print-page p-4 relative">
+            {/* Watermark only for print */}
+            <div className="print:block hidden fixed top-0 left-0 w-full h-full pointer-events-none z-0">
+                <div className="w-full h-full flex items-center justify-center opacity-10 text-[160px] font-bold text-gray-400 rotate-45 select-none">
+                    Бакалійний Двір
+                </div>
+            </div>
+
+            {/* Панель керування */}
             <div className="print:hidden flex flex-col md:flex-row items-start md:items-center justify-between mb-4 space-y-2 md:space-y-0">
                 <button
                     onClick={() => navigate(-1)}
@@ -117,51 +124,50 @@ export default function PrintPage() {
                 </button>
             </div>
 
-            {/* Таблиця з динамічним розміром тексту */}
-            <div className="overflow-x-auto">
-                <table
-                    className={`min-w-full table-auto border border-gray-300 ${textSizeClass}`}
-                >
-                    <thead>
-                        <tr className="bg-gray-100">
-                            <th
-                                className="border p-2 text-left cursor-pointer"
-                                onClick={() => requestSort('name')}
-                            >
-                                Назва{getSortIndicator('name')}
-                            </th>
-                            <th
-                                className="border p-2 text-left cursor-pointer"
-                                onClick={() => requestSort('price')}
-                            >
-                                Ціна{getSortIndicator('price')}
-                            </th>
-                            <th
-                                className="border p-2 text-left cursor-pointer"
-                                onClick={() => requestSort('category')}
-                            >
-                                Категорія{getSortIndicator('category')}
-                            </th>
-                            <th
-                                className="border p-2 text-left cursor-pointer"
-                                onClick={() => requestSort('minOrder')}
-                            >
-                                Мін. кількість{getSortIndicator('minOrder')}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredProducts.map(p => (
-                            <tr key={p._id} className="even:bg-gray-50">
-                                <td className="border p-2">{p.name}</td>
-                                <td className="border p-2">{p.price} ₴</td>
-                                <td className="border p-2">{p.category}</td>
-                                <td className="border p-2">{p.minOrder}</td>
+            {/* Loading or Table */}
+            {loading ? (
+                <div className="text-center py-20">
+                    <motion.div
+                        className="w-12 h-12 border-4 border-gray-200 border-t-green-500 rounded-full mx-auto"
+                        animate={{ rotate: 360 }}
+                        transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                    />
+                    <p className="mt-4 text-gray-500">Завантаження товарів…</p>
+                </div>
+            ) : (
+                <div className="overflow-x-auto">
+                    <table
+                        className={`min-w-full table-auto border border-gray-300 ${textSizeClass}`}
+                    >
+                        <thead>
+                            <tr className="bg-gray-100">
+                                <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('name')}>
+                                    Назва{getSortIndicator('name')}
+                                </th>
+                                <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('price')}>
+                                    Ціна{getSortIndicator('price')}
+                                </th>
+                                <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('category')}>
+                                    Категорія{getSortIndicator('category')}
+                                </th>
+                                <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('minOrder')}>
+                                    Мін. кількість{getSortIndicator('minOrder')}
+                                </th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            {filteredProducts.map(p => (
+                                <tr key={p._id} className="even:bg-gray-50">
+                                    <td className="border p-2">{p.name}</td>
+                                    <td className="border p-2">{p.price} ₴</td>
+                                    <td className="border p-2">{p.category}</td>
+                                    <td className="border p-2">{p.minOrder}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     )
 }
