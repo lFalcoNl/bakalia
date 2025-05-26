@@ -80,7 +80,7 @@ export default function PrintPage() {
         <div className="print-page p-4 relative">
             {/* Watermark only for print */}
             <div className="print:block hidden fixed top-0 left-0 w-full h-full pointer-events-none z-0">
-                <div className="w-full h-full flex items-center justify-center opacity-10 text-7xl font-bold text-gray-400 rotate-45 select-none">
+                <div className="w-full h-full flex items-center justify-center opacity-10 text-[90px] font-bold text-gray-400 rotate-45 select-none">
                     Бакалійний Двір
                 </div>
             </div>
