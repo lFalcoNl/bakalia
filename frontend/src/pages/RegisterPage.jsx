@@ -53,7 +53,7 @@ export default function RegisterPage() {
     }
     const street = `${settlementType}${settlementName}, ${streetType} ${streetName}`
     try {
-      const { data } = await register(surname, street, phone, password)
+      const { data } = await register({surname, street, phone, password})
       addNotification(data.msg || 'Реєстрація пройшла успішно')
       navigate('/login', { replace: true })
     } catch (err) {

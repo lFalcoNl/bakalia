@@ -79,6 +79,7 @@ export function AuthProvider({ children }) {
 
   // Функція реєстрації
   const register = (userInfo) => {
+    console.log(userInfo)
     return api.post(
       '/auth/register',
       userInfo,
