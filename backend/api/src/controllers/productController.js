@@ -35,7 +35,7 @@ async function handleUpsert(req, res, isUpdate = false) {
       if (name === 'image') {
         const publicId = isUpdate
           ? req.params.id
-          : `${Date.now().toString()}-${fields.name}`;
+          : `${Date.now().toString()} - ${fields.name}`;
         uploadPromise = new Promise((resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
             {
