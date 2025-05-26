@@ -124,7 +124,7 @@ export default function PrintPage() {
                 </button>
             </div>
 
-            {/* Loading or Table */}
+            {/* Loading */}
             {loading ? (
                 <div className="text-center py-20">
                     <motion.div
