@@ -5,7 +5,8 @@
   "scripts": {
     "cleanup": "node utils/cleanup.js",
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "build": "echo 'No build needed for pure Node.js backend'"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
