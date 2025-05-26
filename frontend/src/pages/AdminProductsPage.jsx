@@ -305,7 +305,7 @@ export default function AdminProductsPage() {
                         />
                       ) : (
                         <img
-                            src={p.image || '/images/categories/nophoto.png'}
+                          src={p.image || '/images/categories/nophoto.png'}
                           alt={p.name}
                           className="h-8 w-8 object-cover rounded"
                         />
@@ -339,14 +339,14 @@ export default function AdminProductsPage() {
                         p.category
                       )}
                     </td>
-                    <td className="p-2 text-right">
+                    <td className="p-2 text-center">
                       {isEditing ? (
                         <input
                           name="price"
                           type="number"
                           value={editForm.price}
                           onChange={handleEditChange}
-                          className="border p-1 rounded w-full text-right"
+                          className="border p-1 rounded w-full text-center appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
                         />
                       ) : (
                         `${p.price} ₴`
@@ -360,7 +360,7 @@ export default function AdminProductsPage() {
                           min="1"
                           value={editForm.minOrder}
                           onChange={handleEditChange}
-                          className="border p-1 rounded w-full text-center"
+                          className="border p-1 rounded w-full text-center appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
                         />
                       ) : (
                         p.minOrder
@@ -389,7 +389,7 @@ export default function AdminProductsPage() {
                         <>
                           <button
                             onClick={() => startEdit(p)}
-                              className="bg-yellow-500 my-2 text-white px-2 py-1 rounded hover:bg-yellow-600 transition"
+                            className="bg-yellow-500 my-2 text-white px-2 py-1 rounded hover:bg-yellow-600 transition"
                           >
                             Редагувати
                           </button>
