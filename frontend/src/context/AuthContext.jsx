@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
     delete api.defaults.headers.common.Authorization
     localStorage.removeItem('token')
     setUser(null)
-    navigate('/register', { replace: true })
+    navigate('/login', { replace: true })
   }, [navigate])
 
   // Перевірка токена на стартапі
