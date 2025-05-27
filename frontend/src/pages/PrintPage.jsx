@@ -14,7 +14,20 @@ export default function PrintPage() {
         direction: 'ascending'
     })
 
-    const sizeOptions = ['text-xs', 'text-sm', 'text-base', 'text-lg']
+    const sizeOptions = [
+        'text-[6px]',   // Extra extra small
+        'text-[9px]',   // Extra small
+        'text-[10px]',
+        'text-[11px]',
+        'text-[12px]',  // Standard small print
+        'text-[14px]',  // Default readable print size
+        'text-[16px]',  // Comfortable for body text
+        'text-[18px]',
+        'text-[20px]',  // Section titles
+        'text-[24px]',  // Headings
+        'text-[30px]',  // Large headings
+        'text-[36px]'   // Extra large, emphasis
+    ]
     const [sizeIndex, setSizeIndex] = useState(1)
     const textSizeClass = sizeOptions[sizeIndex]
     const decreaseSize = () => sizeIndex > 0 && setSizeIndex(i => i - 1)
@@ -80,7 +93,7 @@ export default function PrintPage() {
         <div className="print-page p-4 relative">
             {/* Watermark only for print */}
             <div className="print:block hidden fixed top-0 left-0 w-full h-full pointer-events-none z-0">
-                <div className="w-full h-full flex items-center justify-center opacity-10 text-[90px] font-bold text-gray-400 rotate-45 select-none">
+                <div className="w-full h-full flex items-center justify-center opacity-10 text-7xl font-bold text-gray-400 rotate-45 select-none">
                     Бакалійний Двір
                 </div>
             </div>
@@ -141,6 +154,7 @@ export default function PrintPage() {
                     >
                         <thead>
                             <tr className="bg-gray-100">
+                                <th className="border p-2 text-center">№</th>
                                 <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('name')}>
                                     Назва{getSortIndicator('name')}
                                 </th>
@@ -156,8 +170,9 @@ export default function PrintPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredProducts.map(p => (
+                            {filteredProducts.map((p, index) => (
                                 <tr key={p._id} className="even:bg-gray-50">
+                                    <td className="border p-2 text-center">{index + 1}</td>
                                     <td className="border p-2">{p.name}</td>
                                     <td className="border p-2">{p.price} ₴</td>
                                     <td className="border p-2">{p.category}</td>
@@ -168,6 +183,7 @@ export default function PrintPage() {
                     </table>
                 </div>
             )}
+
         </div>
     )
 }
