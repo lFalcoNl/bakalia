@@ -158,14 +158,14 @@ export default function PrintPage() {
                                 <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('name')}>
                                     Назва{getSortIndicator('name')}
                                 </th>
-                                <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('price')}>
-                                    Ціна{getSortIndicator('price')}
-                                </th>
                                 <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('category')}>
                                     Категорія{getSortIndicator('category')}
                                 </th>
                                 <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('minOrder')}>
                                     Мін. кількість{getSortIndicator('minOrder')}
+                                </th>
+                                <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('price')}>
+                                    Ціна{getSortIndicator('price')}
                                 </th>
                             </tr>
                         </thead>
@@ -174,9 +174,9 @@ export default function PrintPage() {
                                 <tr key={p._id} className="even:bg-gray-50">
                                     <td className="border p-2 text-center">{index + 1}</td>
                                     <td className="border p-2">{p.name}</td>
-                                    <td className="border p-2">{p.price} ₴</td>
                                     <td className="border p-2">{p.category}</td>
                                     <td className="border p-2">{p.minOrder}</td>
+                                    <td className="border p-2">{p.price} ₴</td>
                                 </tr>
                             ))}
                         </tbody>
