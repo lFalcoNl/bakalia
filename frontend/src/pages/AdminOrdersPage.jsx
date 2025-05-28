@@ -328,7 +328,7 @@ export default function AdminOrdersPage() {
                       return (
                         <li
                           key={i}
-                          className="flex justify-between items-start"
+                          className="flex justify-between items-start py-2 border-b border-gray-200"
                         >
                           {/* LEFT: Name */}
                           <span className="flex-1 pr-4 break-words">
