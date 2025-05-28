@@ -1,5 +1,5 @@
 // frontend/src/components/NavBar.jsx
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useContext, useState, useEffect, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
@@ -11,13 +11,17 @@ export default function NavBar() {
   const [prevCount, setPrevCount] = useState(cart.length)
   const [shake, setShake] = useState(false)
 
+  const prevCountRef = useRef(cart.length)
+
   useEffect(() => {
-    if (cart.length > prevCount) {
+    if (cart.length > prevCountRef.current) {
       setShake(true)
       setTimeout(() => setShake(false), 600)
     }
-    setPrevCount(cart.length)
-  }, [cart.length, prevCount])
+
+    prevCountRef.current = cart.length
+  }, [cart.length])
+  
 
   const closeMenu = () => setOpen(false)
 

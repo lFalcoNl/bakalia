@@ -22,8 +22,10 @@ export default function ProductCard({ product }) {
   const [isZoomed, setIsZoomed] = useState(false)
 
   useEffect(() => {
-    setQuantity(existing ? existing.quantity : minOrder)
-  }, [existing, minOrder])
+    const initialQuantity = existing?.quantity ?? minOrder
+    setQuantity(initialQuantity)
+  }, [existing?.quantity, minOrder])
+
 
   const changeQty = delta =>
     setQuantity(prev => Math.max(minOrder, prev + delta))

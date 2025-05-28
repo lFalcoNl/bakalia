@@ -46,8 +46,10 @@ export default function AdminOrdersPage() {
   }, [addNotification])
 
   useEffect(() => {
-    if (user?.role === 'admin') fetchOrders()
-  }, [user, fetchOrders])
+    if (user?.role !== 'admin') return
+    fetchOrders()
+  }, [user?.role, fetchOrders])
+
 
   if (!user) return null
   if (user.role !== 'admin') return <p>Доступ заборонено</p>
@@ -232,25 +234,38 @@ export default function AdminOrdersPage() {
                       <td className="px-4 py-2">{dayjs(o.createdAt).format('DD.MM.YYYY HH:mm')}</td>
                       <td className="px-4 py-2">{userInfo}</td>
                       <td className="px-4 py-2 whitespace-normal max-h-32 overflow-y-auto">
-                        <ul className="space-y-1">
+                        <ul className="divide-y divide-gray-200 space-y-1">
                           {o.products.map((p, i) => {
                             const name = p.product?.name || p.productId?.name || '—'
                             const prodId = p.product?._id || p.productId?._id
+                            const price = p.product?.price || p.productId?.price
                             return (
                               <li key={i} className="flex justify-between items-start">
-                                <span className="break-words flex-1 pr-2">
-                                  {name} × {p.quantity}
+                                <span className="flex-1 pr-4 break-words">
+                                  {name}
                                 </span>
-                                <div className="flex-shrink-0 flex items-center space-x-2">
-                                  <span>{computeSubtotal(p)} ₴</span>
+
+                                <div className="flex items-center space-x-3">  {/* ← items-center */}
+                                  <div className="text-right">
+                                    <div className="text-sm font-medium">
+                                      {computeSubtotal(p)} ₴
+                                    </div>
+                                    <div className="text-xs text-gray-600 font-bold">
+                                      [{round1(computeSubtotal(p) / price)}×{price}₴]
+                                    </div>
+                                  </div>
+
                                   <button
                                     onClick={() => removeItem(o._id, prodId)}
-                                    className="text-red-600 hover:underline"
+                                    className="text-red-600 hover:underline text-sm"
                                   >
                                     ×
                                   </button>
                                 </div>
                               </li>
+
+
+
                             )
                           })}
                         </ul>
@@ -298,32 +313,51 @@ export default function AdminOrdersPage() {
                 <motion.div key={o._id} className="bg-white rounded shadow-sm p-4" variants={itemVariants}>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-500">
-                      {dayjs(o.createdAt).format('DD.MM.YYYY')}
+                      {dayjs(o.createdAt).format('DD.MM.YYYY HH:mm')}
                     </span>
                     <button onClick={() => deleteOrder(o._id)} className="text-red-600 text-sm hover:underline">
                       Видалити
                     </button>
                   </div>
                   <div className="mb-2 font-semibold">{userInfo}</div>
-                  <ul className="mb-2 text-sm text-gray-700 space-y-1">
+                  <ul className="divide-y divide-gray-200 mb-2 text-sm text-gray-700 space-y-1">
                     {o.products.map((p, i) => {
                       const name = p.product?.name || p.productId?.name || '—'
                       const prodId = p.product?._id || p.productId?._id
+                      const price = p.product?.price || p.productId?.price
                       return (
-                        <li key={i} className="flex justify-between items-start">
-                          <span className="break-words flex-1 pr-2">
-                            {name} × {p.quantity}
+                        <li
+                          key={i}
+                          className="flex justify-between items-start"
+                        >
+                          {/* LEFT: Name */}
+                          <span className="flex-1 pr-4 break-words">
+                            {name}
                           </span>
-                          <div className="flex-shrink-0 flex items-center space-x-2">
-                            <span>{computeSubtotal(p)} ₴</span>
+
+                          {/* RIGHT: Price + formula stacked, with × button */}
+                          <div className="flex items-start space-x-4">
+                            {/* two-line block, right-aligned */}
+                            <div className="text-right">
+                              <div className="text-sm font-medium">
+                                {computeSubtotal(p)} ₴
+                              </div>
+                              <div className="text-xs text-gray-600 font-bold">
+                                [{round1(computeSubtotal(p) / price)}×{price}₴]
+                              </div>
+                            </div>
+
+                            {/* delete button, vertically centered next to the two-line block */}
                             <button
                               onClick={() => removeItem(o._id, prodId)}
-                              className="text-red-600 hover:underline"
+                              className="self-center text-red-600 hover:underline text-sm"
                             >
                               ×
                             </button>
                           </div>
                         </li>
+
+
                       )
                     })}
                   </ul>

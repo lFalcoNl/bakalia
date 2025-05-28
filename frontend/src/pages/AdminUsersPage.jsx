@@ -32,14 +32,25 @@ export default function AdminUsersPage() {
   }
 
   useEffect(() => {
-    fetchUsers()
+    let isMounted = true
+
+    fetchUsers?.().finally(() => {
+      if (!isMounted) return
+      // safe to set state here
+    })
+
+    return () => {
+      isMounted = false
+    }
   }, [])
+
+
 
   const computeDays = u => {
     if (u.role === 'admin') return Infinity
     return Math.max(0, dayjs().diff(dayjs(u.createdAt), 'day'))
   }
-  
+
 
   // 1) filter by searchTerm
   const filtered = useMemo(() => {

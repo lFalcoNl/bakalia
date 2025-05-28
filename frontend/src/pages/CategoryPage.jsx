@@ -6,9 +6,10 @@ import { useNotification } from '../context/NotificationContext'
 import SearchSort from '../components/SearchSort'
 import ProductCard from '../components/ProductCard'
 import { categories } from '../constants/categories'
+import { toUrlSafeSlug } from '../utils/slug'
 
 export default function CategoryPage() {
-    const { category } = useParams()
+    const { category: slug } = useParams()
     const navigate = useNavigate()
     const { addNotification } = useNotification()
 
@@ -17,59 +18,45 @@ export default function CategoryPage() {
     const [search, setSearch] = useState('')
     const [sort, setSort] = useState('')
 
+    const currentCategory = categories.find(c => c.slug === slug)
+
     useEffect(() => {
+        let mounted = true
         setLoading(true)
+
         api.get('/products')
-            .then(r => setProducts(r.data))
-            .catch(() => addNotification('Не вдалося завантажити товари'))
-            .finally(() => setLoading(false))
+            .then(r => mounted && setProducts(r.data))
+            .catch(() => mounted && addNotification('Не вдалося завантажити товари'))
+            .finally(() => mounted && setLoading(false))
+
+        return () => { mounted = false }
     }, [addNotification])
 
-    const exists =
-        category === 'Усі товари' || categories.some(c => c.name === category)
-    if (!exists) {
+    if (!currentCategory) {
         return (
             <p className="p-4 text-red-600">
-                Категорія «{category}» не знайдена
+                Категорія «{slug}» не знайдена
             </p>
         )
     }
 
-    // фільтрація + пошук
-    let filtered = products
-        .filter(p =>
-            category === 'Усі товари' ? true : p.category === category
-        )
-        .filter(p =>
-            p.name.toLowerCase().includes(search.toLowerCase())
-        )
+    // filter + search
+    const filtered = products
+        .filter(p => toUrlSafeSlug(p.category || '') === slug)
+        .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
 
-    // сортування
-    filtered = filtered.slice()
+    // sort
+    const sorted = [...filtered]
     switch (sort) {
-        case 'price_asc':
-            filtered.sort((a, b) => a.price - b.price)
-            break
-        case 'price_desc':
-            filtered.sort((a, b) => b.price - a.price)
-            break
-        case 'date_new':
-            filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            break
-        case 'date_old':
-            filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-            break
-        case 'alpha_asc':
-            filtered.sort((a, b) => a.name.localeCompare(b.name))
-            break
-        case 'alpha_desc':
-            filtered.sort((a, b) => b.name.localeCompare(a.name))
-            break
-        default:
-            break
+        case 'price_asc': sorted.sort((a, b) => a.price - b.price); break
+        case 'price_desc': sorted.sort((a, b) => b.price - a.price); break
+        case 'date_new': sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); break
+        case 'date_old': sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); break
+        case 'alpha_asc': sorted.sort((a, b) => a.name.localeCompare(b.name)); break
+        case 'alpha_desc': sorted.sort((a, b) => b.name.localeCompare(a.name)); break
+        default: break
     }
 
-    // анімація
     const containerVariants = {
         hidden: {},
         visible: { transition: { staggerChildren: 0.1 } }
@@ -91,24 +78,13 @@ export default function CategoryPage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
-                    {/* ← стрілка */}
-                    <svg
-                        className="w-5 h-5 mr-2 text-gray-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 19l-7-7 7-7"
-                        />
+                    <svg className="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                     <span className="text-gray-700 font-medium">Назад</span>
                 </motion.button>
                 <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800">
-                    {category}
+                    {currentCategory.name}
                 </h1>
             </div>
 
@@ -129,12 +105,12 @@ export default function CategoryPage() {
                 </div>
             ) : (
                 <motion.div
-                        className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
+                    className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
                 >
-                    {filtered.map(p => (
+                    {sorted.map(p => (
                         <motion.div key={p._id} variants={cardVariants}>
                             <ProductCard product={p} />
                         </motion.div>

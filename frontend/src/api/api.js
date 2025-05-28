@@ -3,7 +3,8 @@ import { notify } from '../utils/notificationService'
 
 const api = axios.create({
   baseURL: __BACKEND_URL__,
-  withCredentials: true,                  // include cookies / credentials
+  withCredentials: true,
+  timeout: 10000 // optional: detect stuck backend faster
 })
 
 api.interceptors.request.use(config => {
@@ -11,19 +12,20 @@ api.interceptors.request.use(config => {
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`
   }
-  // console.log(
-  //   '→ API Request:',
-  //   config.method.toUpperCase(),
-  //   config.url,
-  //   config.headers.Authorization
-  // )
   return config
 })
 
 api.interceptors.response.use(
   response => response,
   error => {
-    const msg = error.response?.data?.message || error.response?.data?.msg || error.message
+    let msg
+
+    if (error.code === 'ECONNABORTED' || error.message === 'Network Error') {
+      msg = 'Сервер спить або недоступний. Спробуйте ще раз пізніше.'
+    } else {
+      msg = error.response?.data?.message || error.response?.data?.msg || error.message
+    }
+
     notify(msg)
     return Promise.reject(error)
   }

@@ -48,14 +48,17 @@ export default function CartPage() {
     }
   }, [addNotification])
 
+  // Завантаження замовлень
   useEffect(() => {
-    fetchOrders()
+    fetchOrders?.()
   }, [fetchOrders])
 
-  // імітуємо завантаження кошика
+  // Імітуємо завантаження кошика
   useEffect(() => {
-    setCartLoading(false)
+    const timer = setTimeout(() => setCartLoading(false), 0) // optional delay to mimic async
+    return () => clearTimeout(timer)
   }, [])
+
 
   // Підтвердження замовлення
   const handleConfirm = async () => {

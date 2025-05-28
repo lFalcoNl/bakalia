@@ -34,12 +34,25 @@ export default function AdminProductsPage() {
 
   // Initial load
   useEffect(() => {
+    let isMounted = true
     setProductsLoading(true)
+
     api.get('/products')
-      .then(r => setProducts(r.data))
-      .catch(() => addNotification('Помилка завантаження товарів'))
-      .finally(() => setProductsLoading(false))
+      .then(r => {
+        if (isMounted) setProducts(r.data)
+      })
+      .catch(() => {
+        if (isMounted) addNotification('Помилка завантаження товарів')
+      })
+      .finally(() => {
+        if (isMounted) setProductsLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
   }, [addNotification])
+
 
   // Manual refresh
   const refreshProducts = async () => {

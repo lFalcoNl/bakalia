@@ -29,14 +29,26 @@ export default function CollapsibleText({
 
     useEffect(() => {
         if (!expanded) return
-        const onUpdate = () => containerRef.current && setRect(containerRef.current.getBoundingClientRect())
+
+        const onUpdate = () => {
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect()
+                setRect(rect)
+            }
+        }
+
         window.addEventListener('scroll', onUpdate)
         window.addEventListener('resize', onUpdate)
+
+        // Initial call
+        onUpdate()
+
         return () => {
             window.removeEventListener('scroll', onUpdate)
             window.removeEventListener('resize', onUpdate)
         }
-    }, [expanded])
+    }, [expanded, containerRef])
+
 
     return (
         <>

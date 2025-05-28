@@ -15,6 +15,7 @@ export default function PrintPage() {
     })
 
     const sizeOptions = [
+        'text-[4px]',   // Extra extra small
         'text-[6px]',   // Extra extra small
         'text-[9px]',   // Extra small
         'text-[10px]',
@@ -25,22 +26,35 @@ export default function PrintPage() {
         'text-[18px]',
         'text-[20px]',  // Section titles
         'text-[24px]',  // Headings
-        'text-[30px]',  // Large headings
-        'text-[36px]'   // Extra large, emphasis
     ]
-    const [sizeIndex, setSizeIndex] = useState(1)
+    const [sizeIndex, setSizeIndex] = useState(2)
     const textSizeClass = sizeOptions[sizeIndex]
     const decreaseSize = () => sizeIndex > 0 && setSizeIndex(i => i - 1)
     const increaseSize = () =>
         sizeIndex < sizeOptions.length - 1 && setSizeIndex(i => i + 1)
 
     useEffect(() => {
+        let isMounted = true
         setLoading(true)
+
         api.get('/products')
-            .then(({ data }) => setProducts(data))
-            .catch(console.error)
-            .finally(() => setLoading(false))
+            .then(({ data }) => {
+                if (isMounted) setProducts(data)
+            })
+            .catch((err) => {
+                console.error('Помилка завантаження товарів:', err)
+                // Optional: show user-friendly notification
+                // addNotification?.('Не вдалося завантажити товари')
+            })
+            .finally(() => {
+                if (isMounted) setLoading(false)
+            })
+
+        return () => {
+            isMounted = false
+        }
     }, [])
+      
 
     const sortedProducts = useMemo(() => {
         const arr = [...products]
@@ -153,18 +167,18 @@ export default function PrintPage() {
                         className={`min-w-full table-auto border border-gray-300 ${textSizeClass}`}
                     >
                         <thead>
-                            <tr className="bg-gray-100">
-                                <th className="border p-2 text-center">№</th>
-                                <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('name')}>
+                            <tr className="bg-gray-100 print:bg-white">
+                                    <th className="border p-[2px] text-center">№</th>
+                                    <th className="border p-[2px] text-left whitespace-normal">
                                     Назва{getSortIndicator('name')}
                                 </th>
-                                <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('category')}>
+                                    <th className="border p-[2px] text-left whitespace-normal">
                                     Категорія{getSortIndicator('category')}
                                 </th>
-                                <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('minOrder')}>
+                                    <th className="border p-[2px] text-left whitespace-normal">
                                     Мін. кількість{getSortIndicator('minOrder')}
                                 </th>
-                                <th className="border p-2 text-left cursor-pointer" onClick={() => requestSort('price')}>
+                                    <th className="border p-[2px] text-left whitespace-normal">
                                     Ціна{getSortIndicator('price')}
                                 </th>
                             </tr>
@@ -172,11 +186,11 @@ export default function PrintPage() {
                         <tbody>
                             {filteredProducts.map((p, index) => (
                                 <tr key={p._id} className="even:bg-gray-50">
-                                    <td className="border p-2 text-center">{index + 1}</td>
-                                    <td className="border p-2">{p.name}</td>
-                                    <td className="border p-2">{p.category}</td>
-                                    <td className="border p-2">{p.minOrder}</td>
-                                    <td className="border p-2">{p.price} ₴</td>
+                                    <td className="border p-[2px] text-center">{index + 1}</td>
+                                    <td className="border p-[2px]">{p.name}</td>
+                                    <td className="border p-[2px]">{p.category}</td>
+                                    <td className="border p-[2px]">{p.minOrder}</td>
+                                    <td className="border p-[2px]">{p.price} ₴</td>
                                 </tr>
                             ))}
                         </tbody>

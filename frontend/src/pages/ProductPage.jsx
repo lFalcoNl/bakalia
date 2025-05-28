@@ -7,8 +7,22 @@ export default function ProductPage() {
   const [product, setProduct] = useState(null)
 
   useEffect(() => {
-    api.get(`/products/${id}`).then(res => setProduct(res.data))
+    let isMounted = true
+
+    api.get(`/products/${id}`)
+      .then(res => {
+        if (isMounted) setProduct(res.data)
+      })
+      .catch(err => {
+        console.error(`Помилка завантаження товару з id=${id}:`, err)
+        // Optionally show notification here
+      })
+
+    return () => {
+      isMounted = false
+    }
   }, [id])
+  
 
   if (!product) return <p className="p-4">Завантаження...</p>
 

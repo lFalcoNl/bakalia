@@ -1,4 +1,6 @@
-export const categories = [
+import { toUrlSafeSlug } from '../utils/slug'
+
+const rawCategories = [
   { name: 'Фасовані крупи', image: '/images/categories/krupy.png' },
   { name: 'Макаронні вироби', image: '/images/categories/makarony.png' },
   { name: 'Ваговий товар', image: '/images/categories/vahoviy.png' },
@@ -17,5 +19,10 @@ export const categories = [
   { name: 'Корми, комбікорми', image: '/images/categories/feed.png' },
   { name: 'Мінеральні добрива', image: '/images/categories/fertilizers.png' },
   { name: 'Канцтовари', image: '/images/categories/stationery.png' },
-  { name: 'Інші товари', image: '/images/categories/others.png' }
-];
+  { name: 'Інші товари', image: '/images/categories/others.png' },
+]
+
+export const categories = rawCategories.map(cat => ({
+  ...cat,
+  slug: toUrlSafeSlug(cat.name),
+}))
