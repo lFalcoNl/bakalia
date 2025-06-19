@@ -1,4 +1,7 @@
+import { toUrlSafeSlug } from '../utils/slug'
+
 const rawCategories = [
+  // 🛒 Продукти
   { name: 'Фасовані крупи', image: '/images/categories/krupy.png' },
   { name: 'Макаронні вироби', image: '/images/categories/makarony.png' },
   { name: 'Ваговий товар', image: '/images/categories/vahoviy.png' },
@@ -10,18 +13,32 @@ const rawCategories = [
   { name: 'Чай, кава, напої', image: '/images/categories/drinks.png' },
   { name: 'Вода і соки', image: '/images/categories/water.png' },
   { name: 'Солодощі, печиво', image: '/images/categories/sweets.png' },
+
+  // 👶 Дитяче
   { name: 'Дитячі товари', image: '/images/categories/children.png' },
+
+  // 🧼 Побут і гігієна
   { name: 'Засоби гігієни', image: '/images/categories/hygiene.png' },
+  { name: 'Папір, серветки', image: '/images/categories/paper.png' },
+  { name: 'Губки, ганчірки', image: '/images/categories/sponges.png' },
+  { name: 'Кухня Ванна', image: '/images/categories/kitchenbath.png' },
   { name: 'Побутова хімія', image: '/images/categories/chemicals.png' },
+
+  // 🧰 Господарство
   { name: 'Господарські товари', image: '/images/categories/household.png' },
   { name: 'Корми, комбікорми', image: '/images/categories/feed.png' },
   { name: 'Мінеральні добрива', image: '/images/categories/fertilizers.png' },
-  { name: 'Канцтовари', image: '/images/categories/stationery.png' },
-  { name: 'Інші товари', image: '/images/categories/others.png' },
 
-  // Нові категорії
-  { name: 'Папір, серветки', image: '/images/categories/paper.png' },
-  { name: 'Губки, ганчірки', image: '/images/categories/sponges.png' },
+  // 🖊️ Канцелярія
+  { name: 'Канцтовари', image: '/images/categories/stationery.png' },
+
+  // 🔋 Електро / інше
   { name: 'Батарейки', image: '/images/categories/batteries.png' },
-  { name: 'Кухня Ванна', image: '/images/categories/kitchenbath.png' },
+  { name: 'Інші товари', image: '/images/categories/others.png' },
 ]
+
+
+export const categories = rawCategories.map(cat => ({
+  ...cat,
+  slug: toUrlSafeSlug(cat.name),
+}))
