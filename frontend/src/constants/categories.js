@@ -21,7 +21,7 @@ const rawCategories = [
   { name: 'Засоби гігієни', image: '/images/categories/hygiene.png' },
   { name: 'Папір, серветки', image: '/images/categories/paper.png' },
   { name: 'Губки, ганчірки', image: '/images/categories/sponges.png' },
-  { name: 'Кухня Ванна', image: '/images/categories/kitchenbath.png' },
+  { name: 'Кухня, ванна', image: '/images/categories/kitchenbath.png' },
   { name: 'Побутова хімія', image: '/images/categories/chemicals.png' },
 
   // 🧰 Господарство
