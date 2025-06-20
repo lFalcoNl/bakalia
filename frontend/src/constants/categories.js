@@ -34,8 +34,10 @@ const rawCategories = [
 
   // 🔋 Електро / інше
   { name: 'Батарейки', image: '/images/categories/batteries.png' },
+  { name: 'Пакет, клей, запальнички', image: '/images/categories/bags-glue-lighters.png' }, // нова категорія
   { name: 'Інші товари', image: '/images/categories/others.png' },
 ]
+
 
 
 export const categories = rawCategories.map(cat => ({
