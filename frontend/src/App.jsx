@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import NavBar from './components/NavBar'
 import Footer from './components/Footer'
 import PrivateRoute from './components/PrivateRoute'
+import ScrollToTopButton from './components/ScrollToTopButton'
 
 import HomePage from './pages/HomePage'
 import CategoryPage from './pages/CategoryPage'
@@ -23,19 +24,19 @@ export default function App() {
 
       <main className="flex-grow w-full max-w-[1300px] mx-auto px-4 py-6 bg-white rounded-lg shadow-sm">
         <Routes>
-          {/* публічні */}
+          {/* public */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* всі інші — тільки для залогінених */}
+          {/* protected */}
           <Route element={<PrivateRoute />}>
-            {/* користувацькі */}
+            {/* user */}
             <Route path="/" element={<HomePage />} />
             <Route path="/category/:category" element={<CategoryPage />} />
-            <Route path="/product/:id" element={<ProductPage />} />
+            {/* <Route path="/product/:id" element={<ProductPage />} /> */}
             <Route path="/cart" element={<CartPage />} />
 
-            {/* адмінські */}
+            {/* admin */}
             <Route element={<PrivateRoute adminOnly />}>
               <Route path="/admin/print" element={<PrintPage />} />
               <Route path="/admin/products" element={<AdminProducts />} />
@@ -44,12 +45,15 @@ export default function App() {
             </Route>
           </Route>
 
-          {/* всі інші шляхи → на реєстрацію */}
+          {/* fallback */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </main>
 
       <Footer />
+
+      {/* Scroll-to-Top Button (appears after scrolling past viewport height) */}
+      <ScrollToTopButton />
     </div>
   )
 }

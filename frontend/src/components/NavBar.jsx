@@ -1,4 +1,3 @@
-// frontend/src/components/NavBar.jsx
 import React, { useContext, useState, useEffect, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
@@ -7,71 +6,66 @@ import { useCart } from '../context/CartContext'
 export default function NavBar() {
   const { user, logout } = useContext(AuthContext)
   const { cart } = useCart()
-  const [open, setOpen] = useState(false)
-  const [prevCount, setPrevCount] = useState(cart.length)
-  const [shake, setShake] = useState(false)
 
+  const [open, setOpen] = useState(false)
   const prevCountRef = useRef(cart.length)
+  const [shake, setShake] = useState(false)
 
   useEffect(() => {
     if (cart.length > prevCountRef.current) {
       setShake(true)
-      setTimeout(() => setShake(false), 600)
+      const t = setTimeout(() => setShake(false), 600)
+      return () => clearTimeout(t)
     }
-
     prevCountRef.current = cart.length
   }, [cart.length])
-  
 
+  const toggleMenu = () => setOpen(o => !o)
   const closeMenu = () => setOpen(false)
 
   const linkClass = ({ isActive }) =>
-    `px-3 py-2 rounded hover:bg-secondary/20 transition ${isActive ? 'bg-secondary/30' : ''
-    }`
+    `px-3 py-2 rounded-md font-medium transition duration-200
+     hover:bg-white/10 hover:text-white
+     ${isActive ? 'bg-white/20 text-white' : 'text-secondary'}`
 
   return (
-    <header className="sticky top-0 z-50 bg-primary text-secondary shadow-md">
-      <div className="w-full max-w-[1300px] mx-auto px-4 flex items-center justify-between py-3">
-        <NavLink to="/" onClick={closeMenu} className="flex items-center space-x-2">
-          <img
-            src="/images/logo/noSignLogo.png"
-            alt="Logo"
-            className="h-10 rounded-md"
-          />
-          <span className="text-2xl md:text-lg font-bold">Бакалійний Двір</span>
+    <header className=" sticky top-0 z-50 bg-primary text-white shadow-md backdrop-blur-md">
+      <div className="max-w-[1300px] mx-auto px-4 flex items-center justify-between py-3">
+        {/* Logo */}
+        <NavLink to="/" onClick={closeMenu} className="flex items-center space-x-3">
+          <img src="/images/logo/noSignLogo.png" alt="Logo" className="h-10 rounded-md drop-shadow" />
+          <span className="text-2xl text-secondary font-bold tracking-wide">Бакалійний Двір</span>
         </NavLink>
 
-        {/* mobile menu button */}
+        {/* Mobile menu toggle */}
         <button
-          onClick={() => setOpen(o => !o)}
-          className="md:hidden relative focus:outline-none"
+          onClick={toggleMenu}
+          aria-label="Toggle menu"
+          aria-expanded={open}
+          className="lg:hidden relative text-secondary"
         >
-          {/* червоний дот, якщо є товари */}
-          {cart.length > 0 && !open && (
-            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+          {!open && cart.length > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
               {cart.length}
             </span>
           )}
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {open ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                d="M4 8h16M4 16h16" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16" />
             )}
           </svg>
         </button>
 
-        <nav
-          className={`
-            ${open ? 'block' : 'hidden'}
-            absolute top-full left-0 w-full bg-primary shadow-lg
-            md:static md:block md:w-auto md:bg-transparent md:shadow-none
-            overflow-x-hidden
-          `}
-        >
-          <div className="flex flex-col md:flex-row md:items-center md:space-x-4 px-4 py-4 md:p-0">
+        {/* Navigation */}
+        <nav className={`
+          ${open ? 'block' : 'hidden'}
+          absolute top-full left-0 w-full bg-primary shadow-lg
+          lg:static lg:block lg:w-auto lg:bg-transparent lg:shadow-none
+        `}>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-4 px-4 py-4 lg:p-0">
+
             {user ? (
               <>
                 <NavLink to="/" onClick={closeMenu} className={linkClass}>
@@ -82,14 +76,13 @@ export default function NavBar() {
                   to="/cart"
                   onClick={closeMenu}
                   className={({ isActive }) =>
-                    `${linkClass({ isActive })} flex items-center space-x-1 ${shake ? 'animate-bounce' : ''
-                    }`
+                    `${linkClass({ isActive })} flex items-center space-x-2 ${shake ? 'animate-bounce' : ''}`
                   }
                 >
                   <span>Корзина</span>
-                  <span>🛒</span>
+                  <span role="img" aria-label="cart">🛒</span>
                   {cart.length > 0 && (
-                    <span className="bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                    <span className="ml-1 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
                       {cart.length}
                     </span>
                   )}
@@ -110,10 +103,14 @@ export default function NavBar() {
                 )}
 
                 <button
-                  onClick={() => { logout(); closeMenu() }}
-                  className="px-3 py-2 rounded hover:bg-secondary/20 transition text-left"
+                  onClick={() => {
+                    logout()
+                    closeMenu()
+                  }}
+                  className="px-3 py-2 rounded-md hover:bg-white/10 transition flex items-center space-x-1 text-gray-300 hover:text-white"
                 >
-                  Вийти
+                  <span>Вихід</span>
+                  <span>➡️</span>
                 </button>
               </>
             ) : (

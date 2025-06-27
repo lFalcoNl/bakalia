@@ -172,15 +172,6 @@ export default function ProductCard({ product }) {
           </div>
         </div>
       )}
-
-      {/* Toast */}
-      {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-40 pointer-events-none">
-          <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-bounce">
-            {existing ? 'Кошик оновлено!' : 'Товар додано!'}
-          </div>
-        </div>
-      )}
     </>
   )
 }

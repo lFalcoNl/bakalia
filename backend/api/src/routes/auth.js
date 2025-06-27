@@ -1,12 +1,18 @@
-const router = require('express').Router()
-const { register, login, me } = require('../controllers/authController')
-const auth = require('../middleware/auth')
+// backend/api/src/routes/auth.js
+const router = require('express').Router();
+const auth = require('../middleware/auth');
+const roles = require('../middleware/roles');
+const ctrl = require('../controllers/authController');
 
-// Публічні
-router.post('/register', register)
-router.post('/login', login)
+router.post('/register', ctrl.register);
+router.post('/login', ctrl.login);
 
-// Захищений: перевіряємо токен і наявність користувача
-router.get('/me', auth, me)
+// 1) Користувач робить запит на скидання:
+router.post('/forgot-password', ctrl.forgotPassword);
 
-module.exports = router
+// 2) Захищені / адмінські
+router.get('/me', auth, ctrl.me);
+router.patch('/forgot-password/:userId/approve', auth, roles('admin'), ctrl.approveReset);
+router.patch('/forgot-password/:userId/reject', auth, roles('admin'), ctrl.rejectReset);
+
+module.exports = router;

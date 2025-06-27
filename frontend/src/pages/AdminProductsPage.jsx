@@ -18,7 +18,7 @@ export default function AdminProductsPage() {
   // Search filter
   const [search, setSearch] = useState('')
 
-  // Add‐form state
+  // Add-form state
   const [form, setForm] = useState({
     name: '',
     price: '',
@@ -27,7 +27,7 @@ export default function AdminProductsPage() {
   })
   const [file, setFile] = useState(null)
 
-  // Edit‐form state
+  // Edit-form state
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [editFile, setEditFile] = useState(null)
@@ -48,11 +48,8 @@ export default function AdminProductsPage() {
         if (isMounted) setProductsLoading(false)
       })
 
-    return () => {
-      isMounted = false
-    }
+    return () => { isMounted = false }
   }, [addNotification])
-
 
   // Manual refresh
   const refreshProducts = async () => {
@@ -74,8 +71,6 @@ export default function AdminProductsPage() {
       const body = new FormData()
       Object.entries(form).forEach(([k, v]) => body.append(k, v))
       if (file) body.append('image', file)
-
-      // Axios auto‐detects FormData → multipart/form-data
       const { data: newProd } = await api.post('/products', body)
       setProducts([newProd, ...products])
       setForm({ name: '', price: '', category: categories[0].name, minOrder: 1 })
@@ -121,7 +116,6 @@ export default function AdminProductsPage() {
       const body = new FormData()
       Object.entries(editForm).forEach(([k, v]) => body.append(k, v))
       if (editFile) body.append('image', editFile)
-
       const { data: updated } = await api.put(`/products/${id}`, body)
       setProducts(products.map(p => (p._id === id ? updated : p)))
       setEditingId(null)
@@ -172,8 +166,10 @@ export default function AdminProductsPage() {
   // Search filter
   const displayed = useMemo(() => {
     if (!search.trim()) return sortedProducts
+    const term = search.toLowerCase()
     return sortedProducts.filter(p =>
-      p.name.toLowerCase().includes(search.toLowerCase())
+      p.name.toLowerCase().includes(term) ||
+      p.category.toLowerCase().includes(term)
     )
   }, [search, sortedProducts])
 
@@ -188,7 +184,6 @@ export default function AdminProductsPage() {
             aria-label="Переглянути друковану таблицю"
             className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2"
           >
-            {/* printer icon */}
             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none"
               viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 9V2h12v7" />
@@ -269,7 +264,7 @@ export default function AdminProductsPage() {
       {/* SEARCH */}
       <input
         type="text"
-        placeholder="Пошук за назвою…"
+        placeholder="Пошук за назвою або категорією…"
         value={search}
         onChange={e => setSearch(e.target.value)}
         className="mb-4 w-full border p-2 rounded"
@@ -290,32 +285,47 @@ export default function AdminProductsPage() {
           <table className="min-w-full bg-white text-sm">
             <thead className="bg-gray-100 text-gray-700">
               <tr>
+                <th className="p-2">#</th>  {/* ← Нумерація */}
                 <th className="p-2">Фото</th>
-                <th onClick={() => requestSort('name')}
-                  className="p-2 cursor-pointer">Назва{getSortIndicator('name')}</th>
-                <th onClick={() => requestSort('category')}
-                  className="p-2 cursor-pointer">Категорія{getSortIndicator('category')}</th>
+                <th onClick={() => requestSort('name')} className="p-2 cursor-pointer">
+                  Назва{getSortIndicator('name')}
+                </th>
+                <th onClick={() => requestSort('category')} className="p-2 cursor-pointer">
+                  Категорія{getSortIndicator('category')}
+                </th>
                 <th onClick={() => requestSort('price')}
-                  className="p-2 text-right cursor-pointer">Ціна{getSortIndicator('price')}</th>
+                  className="p-2 text-right cursor-pointer">
+                  Ціна{getSortIndicator('price')}
+                </th>
                 <th onClick={() => requestSort('minOrder')}
-                  className="p-2 text-center cursor-pointer">Мін. кількість{getSortIndicator('minOrder')}</th>
-                <th onClick={() => requestSort('updatedAt')}
-                  className="p-2 cursor-pointer">Оновлено{getSortIndicator('updatedAt')}</th>
+                  className="p-2 text-center cursor-pointer">
+                  Мін. кількість{getSortIndicator('minOrder')}
+                </th>
+                <th onClick={() => requestSort('updatedAt')} className="p-2 cursor-pointer">
+                  Оновлено{getSortIndicator('updatedAt')}
+                </th>
                 <th className="p-2">Дія</th>
               </tr>
             </thead>
             <tbody>
-              {displayed.map(p => {
+              {displayed.map((p, idx) => {
                 const isEditing = editingId === p._id
+                // нумеруємо від більшого до меншого
+                const rowNumber = displayed.length - idx
                 return (
                   <tr key={p._id} className="border-t hover:bg-gray-50">
+                    <td className="p-2 text-center">{rowNumber}</td>
                     <td className="p-2">
                       {isEditing ? (
-                        <input
-                          type="file"
-                          onChange={e => setEditFile(e.target.files[0])}
-                          className="border p-1 rounded"
-                        />
+                        <label className="flex items-center justify-center h-8 w-[50px] border rounded cursor-pointer bg-gray-100 text-xs">
+                          Фото
+                          <input
+                            type="file"
+                            id="file"
+                            onChange={e => setEditFile(e.target.files[0])}
+                            className="hidden"
+                          />
+                        </label>
                       ) : (
                         <img
                           src={p.image || '/images/categories/nophoto.png'}
@@ -359,7 +369,7 @@ export default function AdminProductsPage() {
                           type="number"
                           value={editForm.price}
                           onChange={handleEditChange}
-                          className="border p-1 rounded w-full text-center appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          className="border p-1 rounded w-full text-center appearance-none [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                         />
                       ) : (
                         `${p.price} ₴`
@@ -373,7 +383,7 @@ export default function AdminProductsPage() {
                           min="1"
                           value={editForm.minOrder}
                           onChange={handleEditChange}
-                          className="border p-1 rounded w-full text-center appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          className="border p-1 rounded w-full text-center appearance-none [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                         />
                       ) : (
                         p.minOrder

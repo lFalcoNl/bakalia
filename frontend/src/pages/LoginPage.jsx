@@ -1,81 +1,142 @@
 // frontend/src/pages/LoginPage.jsx
-import React, { useState, useContext } from 'react'
-import { useNavigate, useLocation, NavLink } from 'react-router-dom'
-import { AuthContext } from '../context/AuthContext'
-import { useNotification } from '../context/NotificationContext'
+import React, { useState, useContext } from 'react';
+import { useNavigate, useLocation, NavLink } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
+import api from '../api/api';
 
 export default function LoginPage() {
-  const { login } = useContext(AuthContext)
-  const { addNotification } = useNotification()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const from = location.state?.from?.pathname || '/'
+  const { login } = useContext(AuthContext);
+  const { addNotification } = useNotification();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/';
 
-  const [phone, setPhone] = useState('+380')
-  const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('+380');
+  const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [isReset, setIsReset] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handlePhoneChange = e => {
-    const val = e.target.value
-    // Відбираємо тільки цифри
-    const digitsAll = val.replace(/\D/g, '')
-    // Якщо введено більше ніж 3 цифри, беремо ті що після коду 380, максимум 9 цифр
-    let rest = ''
-    if (digitsAll.length > 3) {
-      rest = digitsAll.slice(3, 12)
-    }
-    // Завжди повертаємо '+380' + решта
-    setPhone('+380' + rest)
-  }
+  const formatPhone = v => {
+    const d = v.replace(/\D/g, '');
+    const rest = d.length > 3 ? d.slice(3, 12) : '';
+    return '+380' + rest;
+  };
+  const handlePhoneChange = e => setPhone(formatPhone(e.target.value));
 
-  const handleSubmit = async e => {
-    e.preventDefault()
+  const handleLogin = async e => {
+    e.preventDefault();
+    setLoading(true);
     try {
-      await login(phone, password)
-      navigate(from, { replace: true })
+      await login(phone, password);
+      navigate(from, { replace: true });
     } catch (err) {
-      const msg = err.response?.data?.message || 'Помилка при вході'
-      addNotification(msg)
-    }
-  }
+      addNotification(err.response?.data?.message || 'Помилка при вході');
+    } finally { setLoading(false); }
+  };
+
+  const handleReset = async e => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await api.post('/auth/forgot-password', { phone, newPassword, confirm });
+      addNotification('Запит на скидання створено. Очікуйте підтвердження.');
+      setIsReset(false);
+    } catch {
+      addNotification('Не вдалося подати запит. Спробуйте пізніше.');
+    } finally { setLoading(false); }
+  };
 
   return (
     <div className="flex justify-center items-center min-h-[60vh] px-4">
       <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-lg shadow max-w-md w-full space-y-6 border"
+        onSubmit={isReset ? handleReset : handleLogin}
+        className="bg-white p-8 rounded-lg shadow max-w-md w-full space-y-6"
       >
-        <h1 className="text-2xl font-bold text-center">Увійти</h1>
+        <h1 className="text-2xl font-bold text-center">
+          {isReset ? 'Відновлення пароля' : 'Увійти'}
+        </h1>
+
         <div className="space-y-4">
           <input
             type="tel"
-            placeholder="+380XXXXXXXXX"
             value={phone}
             onChange={handlePhoneChange}
-            className="border p-2 rounded w-full"
+            placeholder="+380XXXXXXXXX"
+            className="w-full border p-2 rounded"
             required
           />
-          <input
-            type="password"
-            placeholder="Пароль"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="border p-2 rounded w-full"
-            required
-          />
+
+          {isReset ? (
+            <>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Новий пароль"
+                className="w-full border p-2 rounded"
+                required
+              />
+              <input
+                type="password"
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                placeholder="Підтвердіть пароль"
+                className="w-full border p-2 rounded"
+                required
+              />
+            </>
+          ) : (
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Пароль"
+              className="w-full border p-2 rounded"
+              required
+            />
+          )}
         </div>
+
         <button
           type="submit"
-          className="bg-green-600 text-white rounded w-full py-2 hover:bg-green-700 transition"
+          disabled={loading}
+          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
         >
-          Увійти
+          {loading
+            ? 'Зачекайте…'
+            : isReset
+              ? 'Запитати скидання'
+              : 'Увійти'}
         </button>
-        <div className="text-center text-sm">
-          Немає аккаунту?{' '}
-          <NavLink to="/register" className="text-green-600 hover:underline">
-            Реєстрація
-          </NavLink>
+
+        <div className="text-center text-sm space-y-2">
+          {isReset ? (
+            <button
+              type="button"
+              onClick={() => setIsReset(false)}
+              className="text-green-600 hover:underline"
+            >
+              Повернутись до входу
+            </button>
+          ) : (
+              <div className='flex justify-between items-center'>
+              <button
+                type="button"
+                onClick={() => setIsReset(true)}
+                className="text-green-600 hover:underline block"
+              >
+                Скинути пароль
+              </button>
+              <NavLink to="/register" className="text-green-600 hover:underline">
+                Реєстрація
+              </NavLink>
+            </div>
+          )}
         </div>
       </form>
     </div>
-  )
+  );
 }

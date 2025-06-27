@@ -16,28 +16,34 @@ export default function AdminOrdersPage() {
   const { user } = useContext(AuthContext)
   const { addNotification } = useNotification()
 
-  // state
   const [orders, setOrders] = useState([])
   const [ordersLoading, setOrdersLoading] = useState(true)
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' })
   const [searchTerm, setSearchTerm] = useState('')
+  const [expandedOrders, setExpandedOrders] = useState({})
 
-  // helpers
+  const toggleExpand = id =>
+    setExpandedOrders(prev => ({ ...prev, [id]: !prev[id] }))
+
   const round1 = n => Math.round(n * 10) / 10
+  const computeSubtotal = item => round1((item.price ?? 0) * item.quantity)
+  const computeTotal = order =>
+    round1(order.products.reduce((sum, p) => sum + computeSubtotal(p), 0))
+
   const statuses = [
     { value: 'new', label: 'Нове' },
     { value: 'processing', label: 'В обробці' },
     { value: 'done', label: 'Виконано' },
   ]
+
   const listVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }
   const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }
 
-  // fetch orders
   const fetchOrders = useCallback(async () => {
     setOrdersLoading(true)
     try {
       const { data } = await api.get('/orders')
-      setOrders(Array.isArray(data) ? data : data.orders ?? [])
+      setOrders(Array.isArray(data) ? data : [])
     } catch {
       addNotification('Помилка завантаження замовлень')
     } finally {
@@ -46,24 +52,22 @@ export default function AdminOrdersPage() {
   }, [addNotification])
 
   useEffect(() => {
-    if (user?.role !== 'admin') return
-    fetchOrders()
+    if (user?.role === 'admin') fetchOrders()
   }, [user?.role, fetchOrders])
-
 
   if (!user) return null
   if (user.role !== 'admin') return <p>Доступ заборонено</p>
 
-  // actions
   const changeStatus = async (id, status) => {
     try {
       const { data } = await api.patch(`/orders/${id}`, { status })
-      setOrders(prev => prev.map(o => (o._id === id ? data : o)))
+      setOrders(prev => prev.map(o => o._id === id ? data : o))
       addNotification('Статус оновлено')
     } catch {
       addNotification('Не вдалося оновити статус')
     }
   }
+
   const deleteOrder = async id => {
     if (!window.confirm('Видалити замовлення?')) return
     try {
@@ -74,24 +78,18 @@ export default function AdminOrdersPage() {
       addNotification('Не вдалося видалити замовлення')
     }
   }
+
   const removeItem = async (orderId, productId) => {
     if (!window.confirm('Видалити цей товар з замовлення?')) return
     try {
       const { data } = await api.delete(`/orders/${orderId}/products/${productId}`)
-      setOrders(prev => prev.map(o => (o._id === orderId ? data : o)))
+      setOrders(prev => prev.map(o => o._id === orderId ? data : o))
       addNotification('Товар видалено з замовлення')
     } catch {
       addNotification('Не вдалося видалити товар із замовлення')
     }
   }
 
-  // compute totals
-  const computeSubtotal = item =>
-    round1((item.product?.price ?? item.productId?.price ?? 0) * item.quantity)
-  const computeTotal = order =>
-    round1(order.products.reduce((sum, p) => sum + computeSubtotal(p), 0))
-
-  // sorting
   const requestSort = key =>
     setSortConfig(prev =>
       prev.key === key
@@ -99,56 +97,50 @@ export default function AdminOrdersPage() {
         : { key, direction: 'asc' }
     )
   const getSortIndicator = key =>
-    sortConfig.key === key ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''
+    sortConfig.key === key
+      ? sortConfig.direction === 'asc'
+        ? ' ▲'
+        : ' ▼'
+      : ''
 
   const sortedOrders = useMemo(() => {
     const arr = [...orders]
     const factor = sortConfig.direction === 'asc' ? 1 : -1
-
     arr.sort((a, b) => {
       let cmp = 0
       switch (sortConfig.key) {
         case 'date':
           cmp = new Date(a.createdAt) - new Date(b.createdAt)
           break
-        case 'user': {
-          const getKey = o => ((o.user ?? o.userId)?.surname ?? '').toLowerCase()
-          cmp = getKey(a).localeCompare(getKey(b))
+        case 'user':
+          cmp = (a.userName ?? '').localeCompare(b.userName ?? '')
           break
-        }
         case 'total':
           cmp = computeTotal(a) - computeTotal(b)
           break
         case 'status':
-          cmp = a.status.localeCompare(b.status)
+          cmp = (a.status ?? '').localeCompare(b.status ?? '')
           break
-        default:
-          return 0
       }
       return cmp * factor
     })
-
     return arr
   }, [orders, sortConfig])
 
-  // filtering
   const filteredOrders = useMemo(() => {
     if (!searchTerm.trim()) return sortedOrders
     const term = searchTerm.toLowerCase()
     return sortedOrders.filter(o => {
-      const u = o.user ?? o.userId ?? {}
-      const surname = u.surname ?? '—'
-      const phone = u.phone ?? '—'
-      const street = u.street ?? '—'
-      const userInfo = `${surname} ${phone} ${street}`.toLowerCase()
-
-      if (userInfo.includes(term)) return true
+      const info = `${o.userName} ${o.userPhone} ${o.userStreet}`.toLowerCase()
+      if (info.includes(term)) return true
       if (computeTotal(o).toString().includes(term)) return true
-      if (o.status.includes(term)) return true
+      if ((o.status ?? '').includes(term)) return true
       if (statuses.some(s => s.value === o.status && s.label.toLowerCase().includes(term))) return true
-      return o.products.some(p => (p.product?.name || p.productId?.name || '').toLowerCase().includes(term))
+      return o.products.some(p => (p.name ?? '').toLowerCase().includes(term))
     })
   }, [searchTerm, sortedOrders, statuses])
+
+  const totalOrders = filteredOrders.length
 
   return (
     <div className="p-4">
@@ -181,7 +173,7 @@ export default function AdminOrdersPage() {
       {/* Search */}
       <input
         type="text"
-        placeholder="Пошук за користувачем, статусом, товаром…"
+        placeholder="Пошук за користувачем, статусом або товаром…"
         value={searchTerm}
         onChange={e => setSearchTerm(e.target.value)}
         className="mb-4 w-full border px-3 py-2 rounded focus:outline-none"
@@ -199,11 +191,17 @@ export default function AdminOrdersPage() {
         </div>
       ) : (
         <>
-          {/* Table for Desktop (≥1024px) */}
-          <motion.div className="hidden lg:block overflow-x-auto" initial="hidden" animate="visible" variants={listVariants}>
+          {/* Desktop Table */}
+          <motion.div
+            className="hidden lg:block overflow-x-auto"
+            initial="hidden"
+            animate="visible"
+            variants={listVariants}
+          >
             <table className="w-full table-fixed bg-white rounded shadow-sm text-sm">
               <thead className="bg-gray-100 text-gray-700">
                 <tr>
+                  <th className="w-12 px-4 py-2">#</th>
                   <th onClick={() => requestSort('date')} className="w-32 px-4 py-2 cursor-pointer">
                     Дата{getSortIndicator('date')}
                   </th>
@@ -221,69 +219,42 @@ export default function AdminOrdersPage() {
                 </tr>
               </thead>
               <motion.tbody variants={listVariants}>
-                {filteredOrders.map(o => {
+                {filteredOrders.map((o, idx) => {
+                  const number = totalOrders - idx
                   const total = computeTotal(o)
-                  const u = o.user ?? o.userId ?? {}
-                  const surname = u.surname ?? '—'
-                  const phone = u.phone ?? '—'
-                  const street = u.street ?? u.address?.street ?? '—'
-                  const userInfo = `${surname}, ${phone}, ${street}`
+                  const userInfo = `${o.userName}, ${o.userPhone}, ${o.userStreet}`
+                  const statusLabel = statuses.find(s => s.value === o.status)?.label || o.status
 
                   return (
                     <motion.tr key={o._id} className="border-t hover:bg-gray-50" variants={itemVariants}>
+                      <td className="px-4 py-2">{number}</td>
                       <td className="px-4 py-2">{dayjs(o.createdAt).format('DD.MM.YYYY HH:mm')}</td>
-                      <td className="px-4 py-2">{userInfo}</td>
+                      <td className="px-4 py-2 whitespace-normal">{userInfo}</td>
                       <td className="px-4 py-2 whitespace-normal max-h-32 overflow-y-auto">
                         <ul className="divide-y divide-gray-200 space-y-1">
-                          {o.products.map((p, i) => {
-                            const name = p.product?.name || p.productId?.name || '—'
-                            const prodId = p.product?._id || p.productId?._id
-                            const price = p.product?.price || p.productId?.price
-                            return (
-                              <li key={i} className="flex justify-between items-start">
-                                <span className="flex-1 pr-4 break-words">
-                                  {name}
-                                </span>
-
-                                <div className="flex items-center space-x-3">  {/* ← items-center */}
-                                  <div className="text-right">
-                                    <div className="text-sm font-medium">
-                                      {computeSubtotal(p)} ₴
-                                    </div>
-                                    <div className="text-xs text-gray-600 font-bold">
-                                      [{round1(computeSubtotal(p) / price)}×{price}₴]
-                                    </div>
+                          {o.products.map((p, i) => (
+                            <li key={i} className="flex justify-between items-start">
+                              <span className="flex-1 pr-4 break-words">{p.name}</span>
+                              <div className="flex items-center space-x-3">
+                                <div className="text-right">
+                                  <div className="text-sm font-medium">{computeSubtotal(p)} ₴</div>
+                                  <div className="text-xs text-gray-600 font-bold">
+                                    [{round1(computeSubtotal(p) / (p.price || 1))}×{p.price}₴]
                                   </div>
-
-                                  <button
-                                    onClick={() => removeItem(o._id, prodId)}
-                                    className="text-red-600 hover:underline text-sm"
-                                  >
-                                    ×
-                                  </button>
                                 </div>
-                              </li>
-
-
-
-                            )
-                          })}
+                                <button
+                                  onClick={() => removeItem(o._id, p.productId)}
+                                  className="text-red-600 hover:underline text-sm"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            </li>
+                          ))}
                         </ul>
                       </td>
                       <td className="px-4 py-2 text-right font-semibold">{total} ₴</td>
-                      <td className="px-4 py-2 text-center">
-                        <select
-                          value={o.status}
-                          onChange={e => changeStatus(o._id, e.target.value)}
-                          className="border px-2 py-1 rounded text-sm"
-                        >
-                          {statuses.map(s => (
-                            <option key={s.value} value={s.value}>
-                              {s.label}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
+                      <td className="px-4 py-2 text-center">{statusLabel}</td>
                       <td className="px-4 py-2 text-center">
                         <button
                           onClick={() => deleteOrder(o._id)}
@@ -299,83 +270,91 @@ export default function AdminOrdersPage() {
             </table>
           </motion.div>
 
-          {/* Card view for everything below desktop */}
-          <motion.div className="lg:hidden space-y-4" initial="hidden" animate="visible" variants={listVariants}>
-            {filteredOrders.map(o => {
+          {/* Mobile Compact Cards */}
+          <motion.div
+            className="lg:hidden space-y-3"
+            initial="hidden"
+            animate="visible"
+            variants={listVariants}
+          >
+            {filteredOrders.map((o, idx) => {
+              const number = totalOrders - idx
               const total = computeTotal(o)
-              const u = o.user ?? o.userId ?? {}
-              const surname = u.surname ?? '—'
-              const phone = u.phone ?? '—'
-              const street = u.street ?? u.address?.street ?? '—'
-              const userInfo = `${surname}, ${phone}, ${street}`
+              const statusLabel = statuses.find(s => s.value === o.status)?.label || o.status
 
               return (
-                <motion.div key={o._id} className="bg-white rounded shadow-sm p-4" variants={itemVariants}>
+                <motion.div
+                  key={o._id}
+                  className="bg-white rounded shadow-sm p-3"
+                  variants={itemVariants}
+                >
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-500">
-                      {dayjs(o.createdAt).format('DD.MM.YYYY HH:mm')}
-                    </span>
-                    <button onClick={() => deleteOrder(o._id)} className="text-red-600 text-sm hover:underline">
-                      Видалити
-                    </button>
-                  </div>
-                  <div className="mb-2 font-semibold">{userInfo}</div>
-                  <ul className="divide-y divide-gray-200 mb-2 text-sm text-gray-700 space-y-1">
-                    {o.products.map((p, i) => {
-                      const name = p.product?.name || p.productId?.name || '—'
-                      const prodId = p.product?._id || p.productId?._id
-                      const price = p.product?.price || p.productId?.price
-                      return (
-                        <li
-                          key={i}
-                          className="flex justify-between items-start py-2 border-b border-gray-200"
-                        >
-                          {/* LEFT: Name */}
-                          <span className="flex-1 pr-4 break-words">
-                            {name}
-                          </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-base text-gray-600">
+                        {number}. {dayjs(o.createdAt).format('DD.MM.YYYY HH:mm')}
+                      </div>
+                      <div className="text-base font-medium text-gray-800">
 
-                          {/* RIGHT: Price + formula stacked, with × button */}
-                          <div className="flex items-start space-x-4">
-                            {/* two-line block, right-aligned */}
-                            <div className="text-right">
-                              <div className="text-sm font-medium">
-                                {computeSubtotal(p)} ₴
+                        {o.userName} ·  <span className='font-bold'>{o.products.length}</span> тов. ·   <span className='font-bold'>{total}</span>₴ · {statusLabel}
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => toggleExpand(o._id)}
+                        className="w-[30px] h-[30px] flex items-center justify-center bg-yellow-500 text-sm text-white rounded hover:bg-yellow-600 transition"
+                      >
+                        {expandedOrders[o._id] ? '▲' : '▼'}
+                      </button>
+                      <button
+                        onClick={() => deleteOrder(o._id)}
+                        className="w-[30px] h-[30px] flex items-center justify-center bg-red-500 text-sm text-white rounded hover:bg-red-600 transition"
+                      >
+                        ✖
+                      </button>
+                    </div>
+
+                  </div>
+
+                  {expandedOrders[o._id] && (
+                    <>
+                      <ul className="divide-y divide-gray-200 mb-2 text-sm text-gray-700 space-y-1">
+                        {o.products.map((p, i) => (
+                          <li key={i} className="flex justify-between items-start py-1">
+                            <span className="flex-1 pr-2 break-words truncate">{p.name}</span>
+                            <div className="flex items-center space-x-2">
+                              <div className="text-right">
+                                <div className="text-sm font-medium">{computeSubtotal(p)} ₴</div>
+                                <div className="text-xs text-gray-600 font-bold">
+                                  [{round1(computeSubtotal(p) / (p.price || 1))}×{p.price}₴]
+                                </div>
                               </div>
-                              <div className="text-xs text-gray-600 font-bold">
-                                [{round1(computeSubtotal(p) / price)}×{price}₴]
-                              </div>
+                              <button
+                                onClick={() => removeItem(o._id, p.productId)}
+                                className="self-center text-red-600 hover:underline text-sm"
+                              >
+                                ×
+                              </button>
                             </div>
-
-                            {/* delete button, vertically centered next to the two-line block */}
-                            <button
-                              onClick={() => removeItem(o._id, prodId)}
-                              className="self-center text-red-600 hover:underline text-sm"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        </li>
-
-
-                      )
-                    })}
-                  </ul>
-                  <div className="flex justify-between items-center mb-2">
-                    <span>Всього:</span>
-                    <span className="font-semibold">{total} ₴</span>
-                  </div>
-                  <select
-                    value={o.status}
-                    onChange={e => changeStatus(o._id, e.target.value)}
-                    className="w-full border px-2 py-1 rounded text-sm"
-                  >
-                    {statuses.map(s => (
-                      <option key={s.value} value={s.value}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="flex justify-between items-center mb-2 text-base">
+                        <span>Всього:</span>
+                        <span className="font-semibold">{total} ₴</span>
+                      </div>
+                      <select
+                        value={o.status}
+                        onChange={e => changeStatus(o._id, e.target.value)}
+                        className="w-full border px-2 py-1 rounded text-sm"
+                      >
+                        {statuses.map(s => (
+                          <option key={s.value} value={s.value}>
+                            {s.label}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  )}
                 </motion.div>
               )
             })}

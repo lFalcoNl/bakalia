@@ -1,34 +1,23 @@
 // backend/api/src/routes/products.js
-const router = require('express').Router();
-const auth = require('../middleware/auth');
-const roles = require('../middleware/roles');
-const ctrl = require('../controllers/productController');
+const express = require('express')
+const router = express.Router()
+const auth = require('../middleware/auth')
+const roles = require('../middleware/roles')
+const ctrl = require('../controllers/productController')
 
-// Public: list products
-router.get('/', ctrl.getAll);
+// Public: list all products, optionally filtered by ?category=<slug>
+router.get('/', ctrl.getAll)
 
-// Admin: create product with optional image upload
-router.post(
-    '/',
-    auth,
-    roles('admin'),
-    ctrl.create
-);
+// Public: list products by category slug
+router.get('/category/:slug', ctrl.getByCategory)
 
-// Admin: update product and image
-router.put(
-    '/:id',
-    auth,
-    roles('admin'),
-    ctrl.update
-);
+// Admin: create product
+router.post('/', auth, roles('admin'), ctrl.create)
 
-// Admin: delete product and its image
-router.delete(
-    '/:id',
-    auth,
-    roles('admin'),
-    ctrl.remove
-);
+// Admin: update product
+router.put('/:id', auth, roles('admin'), ctrl.update)
 
-module.exports = router;
+// Admin: delete product
+router.delete('/:id', auth, roles('admin'), ctrl.remove)
+
+module.exports = router
