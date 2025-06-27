@@ -254,7 +254,19 @@ export default function AdminOrdersPage() {
                         </ul>
                       </td>
                       <td className="px-4 py-2 text-right font-semibold">{total} ₴</td>
-                      <td className="px-4 py-2 text-center">{statusLabel}</td>
+                      <td className="px-4 py-2 text-center">
+                        <select
+                          value={o.status}
+                          onChange={e => changeStatus(o._id, e.target.value)}
+                          className="border px-2 py-1 rounded text-sm"
+                        >
+                          {statuses.map(s => (
+                            <option key={s.value} value={s.value}>
+                              {s.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
                       <td className="px-4 py-2 text-center">
                         <button
                           onClick={() => deleteOrder(o._id)}
