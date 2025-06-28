@@ -244,7 +244,7 @@ export default function AdminUsersPage() {
                           {u.role !== 'admin' && (
                             <button
                               onClick={() => deleteUser(u._id, u.role)}
-                              className="bg-red-500 text-white px-2 py-1 hover:bg-red-700 rounded-full transition"
+                              className="bg-red-600 text-white px-2 py-1 hover:bg-red-700 rounded-full transition"
                             >
                               Видалити
                             </button>
