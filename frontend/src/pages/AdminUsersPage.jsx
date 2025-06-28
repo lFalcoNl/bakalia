@@ -219,13 +219,13 @@ export default function AdminUsersPage() {
                             <div className="flex flex-col space-y-2">
                               <button
                                 onClick={() => approveReset(u._id)}
-                                className="bg-blue-600 text-white px-2 py-1 hover:bg-red-600 rounded-full transition"
+                                className="bg-blue-600 text-white px-2 py-1 hover:bg-blue-600 rounded-full transition"
                               >
                                 Скинути
                               </button>
                               <button
                                 onClick={() => rejectReset(u._id)}
-                                className="bg-yellow-600 text-white px-2 py-1 hover:bg-red-600 rounded-full transition"
+                                className="bg-yellow-600 text-white px-2 py-1 hover:bg-yellow-600 rounded-full transition"
                               >
                                 Відхилити
                               </button>
@@ -235,7 +235,7 @@ export default function AdminUsersPage() {
                           {!u.isApproved && (
                             <button
                               onClick={() => approveUser(u._id)}
-                              className="bg-green-600 text-white px-2 py-1 hover:bg-red-600 rounded-full transition"
+                              className="bg-green-600 text-white px-2 py-1 hover:bg-green-600 rounded-full transition"
                             >
                               Підтвердити
                             </button>
