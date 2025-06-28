@@ -158,7 +158,7 @@ export default function AdminUsersPage() {
         placeholder="Пошук за прізвищем, телефоном або адресою…"
         value={searchTerm}
         onChange={e => setSearchTerm(e.target.value)}
-        className="mb-4 w-full border py-2 px-4 rounded-full focus:outline-none"
+        className="mb-4 w-full border py-2 px-4 rounded focus:outline-none"
       />
 
       {/* Loading */}

@@ -110,7 +110,7 @@ export default function NavBar() {
                   className="px-3 py-2 rounded-md hover:bg-white/10 transition flex items-center space-x-1 text-gray-300 hover:text-white"
                 >
                   <span>Вихід</span>
-                  <span>➡️</span>
+                  <span>→</span>
                 </button>
               </>
             ) : (
