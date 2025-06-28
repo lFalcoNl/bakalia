@@ -158,7 +158,7 @@ export default function AdminUsersPage() {
         placeholder="Пошук за прізвищем, телефоном або адресою…"
         value={searchTerm}
         onChange={e => setSearchTerm(e.target.value)}
-        className="mb-4 w-full border p-2 rounded focus:outline-none"
+        className="mb-4 w-full border py-2 px-4 rounded-full focus:outline-none"
       />
 
       {/* Loading */}
@@ -219,13 +219,13 @@ export default function AdminUsersPage() {
                             <div className="flex flex-col space-y-2">
                               <button
                                 onClick={() => approveReset(u._id)}
-                                className="bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                                className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs"
                               >
                                 Скинути
                               </button>
                               <button
                                 onClick={() => rejectReset(u._id)}
-                                className="bg-yellow-600 text-white px-2 py-1 rounded text-xs"
+                                className="bg-yellow-600 text-white px-2 py-1 rounded-full text-xs"
                               >
                                 Відхилити
                               </button>
@@ -235,7 +235,7 @@ export default function AdminUsersPage() {
                           {!u.isApproved && (
                             <button
                               onClick={() => approveUser(u._id)}
-                              className="bg-green-600 text-white px-2 py-1 rounded text-xs"
+                              className="bg-green-600 text-white px-2 py-1 rounded-full text-xs"
                             >
                               Підтвердити
                             </button>
@@ -244,7 +244,7 @@ export default function AdminUsersPage() {
                           {u.role !== 'admin' && (
                             <button
                               onClick={() => deleteUser(u._id, u.role)}
-                              className="bg-red-600 text-white px-2 py-1 rounded text-xs"
+                              className="h-[30px] bg-red-500 my-2 text-white px-2 py-1 hover:bg-red-600 rounded-full transition"
                             >
                               Видалити
                             </button>
@@ -282,13 +282,13 @@ export default function AdminUsersPage() {
                         <>
                           <button
                             onClick={() => approveReset(u._id)}
-                            className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded"
+                            className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded-full"
                           >
                             🔄
                           </button>
                           <button
                             onClick={() => rejectReset(u._id)}
-                            className="w-8 h-8 flex items-center justify-center bg-yellow-600 text-white rounded"
+                            className="w-8 h-8 flex items-center justify-center bg-yellow-600 text-white rounded-full"
                           >
                             ✖
                           </button>
@@ -297,7 +297,7 @@ export default function AdminUsersPage() {
                       {!u.isApproved && (
                         <button
                           onClick={() => approveUser(u._id)}
-                          className="w-8 h-8 flex items-center justify-center bg-green-600 text-white rounded"
+                          className="w-8 h-8 flex items-center justify-center bg-green-600 text-white rounded-full"
                         >
                           ✔
                         </button>
@@ -305,9 +305,9 @@ export default function AdminUsersPage() {
                       {u.role !== 'admin' && (
                         <button
                           onClick={() => deleteUser(u._id, u.role)}
-                          className="w-8 h-8 flex items-center justify-center bg-red-600 text-white rounded"
+                          className="w-8 h-8 flex items-center justify-center bg-red-600 text-white rounded-full"
                         >
-                          🗑
+                          ✖
                         </button>
                       )}
                     </div>

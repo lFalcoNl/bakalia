@@ -25,6 +25,21 @@ export default function AdminOrdersPage() {
   const toggleExpand = id =>
     setExpandedOrders(prev => ({ ...prev, [id]: !prev[id] }))
 
+  const toggleAllExpanded = () => {
+    const allExpanded =
+      Object.values(expandedOrders).length === filteredOrders.length &&
+      Object.values(expandedOrders).every(Boolean)
+    if (allExpanded) {
+      setExpandedOrders({})
+    } else {
+      const all = {}
+      filteredOrders.forEach(o => (all[o._id] = true))
+      setExpandedOrders(all)
+    }
+  }
+
+  const isExpanded = id => !!expandedOrders[id]
+
   const round1 = n => Math.round(n * 10) / 10
   const computeSubtotal = item => round1((item.price ?? 0) * item.quantity)
   const computeTotal = order =>
@@ -144,30 +159,43 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="p-4">
-      {/* Header + Refresh */}
-      <div className="flex items-center justify-between mb-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h1 className="text-2xl font-semibold">Управління замовленнями</h1>
-        <button
-          onClick={fetchOrders}
-          disabled={ordersLoading}
-          className="inline-flex items-center justify-center bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-full p-2"
-        >
-          <motion.svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-6 h-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            initial={{ rotate: 0 }}
-            animate={ordersLoading ? { rotate: 360 } : { rotate: 0 }}
-            transition={{ duration: 0.8, ease: 'linear' }}
+        <div className="flex gap-2">
+          <button
+            onClick={toggleAllExpanded}
+            className="w-[36px] h-[36px] flex items-center justify-center bg-yellow-500 hover:bg-yellow-700 disabled:opacity-50 text-white rounded-full"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M23 4v6h-6" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1 20v-6h6" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.51 9a9 9 0 0114.36-3.36" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.49 15a9 9 0 01-14.36 3.36" />
-          </motion.svg>
-        </button>
+            {Object.values(expandedOrders).length === filteredOrders.length &&
+              Object.values(expandedOrders).every(Boolean)
+              ? '▲'
+              : '▼'}
+          </button>
+
+          <button
+            onClick={fetchOrders}
+            disabled={ordersLoading}
+            className="w-[36px] h-[36px] flex items-center justify-center bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-full"
+          >
+            <motion.svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              initial={{ rotate: 0 }}
+              animate={ordersLoading ? { rotate: 360 } : { rotate: 0 }}
+              transition={{ duration: 0.8, ease: 'linear' }}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M23 4v6h-6" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1 20v-6h6" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.51 9a9 9 0 0114.36-3.36" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.49 15a9 9 0 01-14.36 3.36" />
+            </motion.svg>
+          </button>
+
+        </div>
       </div>
 
       {/* Search */}
@@ -215,7 +243,7 @@ export default function AdminOrdersPage() {
                   <th onClick={() => requestSort('status')} className="w-32 px-4 py-2 text-center cursor-pointer">
                     Статус{getSortIndicator('status')}
                   </th>
-                  <th className="w-24 px-4 py-2 text-center">Дія</th>
+                  <th className="w-32 px-4 py-2 text-center">Дія</th>
                 </tr>
               </thead>
               <motion.tbody variants={listVariants}>
@@ -231,27 +259,29 @@ export default function AdminOrdersPage() {
                       <td className="px-4 py-2">{dayjs(o.createdAt).format('DD.MM.YYYY HH:mm')}</td>
                       <td className="px-4 py-2 whitespace-normal">{userInfo}</td>
                       <td className="px-4 py-2 whitespace-normal max-h-32 overflow-y-auto">
-                        <ul className="divide-y divide-gray-200 space-y-1">
-                          {o.products.map((p, i) => (
-                            <li key={i} className="flex justify-between items-start">
-                              <span className="flex-1 pr-4 break-words">{p.name}</span>
-                              <div className="flex items-center space-x-3">
-                                <div className="text-right">
-                                  <div className="text-sm font-medium">{computeSubtotal(p)} ₴</div>
-                                  <div className="text-xs text-gray-600 font-bold">
-                                    [{round1(computeSubtotal(p) / (p.price || 1))}×{p.price}₴]
+                        {isExpanded(o._id) && (
+                          <ul className="divide-y divide-gray-200 space-y-1">
+                            {o.products.map((p, i) => (
+                              <li key={i} className="flex justify-between items-start">
+                                <span className="flex-1 pr-4 break-words">{p.name}</span>
+                                <div className="flex items-center space-x-3">
+                                  <div className="text-right">
+                                    <div className="text-sm font-medium">{computeSubtotal(p)} ₴</div>
+                                    <div className="text-xs text-gray-600 font-bold">
+                                      [{round1(computeSubtotal(p) / (p.price || 1))}×{p.price}₴]
+                                    </div>
                                   </div>
+                                  <button
+                                    onClick={() => removeItem(o._id, p.productId)}
+                                    className="text-black hover:underline text-sm"
+                                  >
+                                    ×
+                                  </button>
                                 </div>
-                                <button
-                                  onClick={() => removeItem(o._id, p.productId)}
-                                  className="text-red-600 hover:underline text-sm"
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </td>
                       <td className="px-4 py-2 text-right font-semibold">{total} ₴</td>
                       <td className="px-4 py-2 text-center">
@@ -267,10 +297,16 @@ export default function AdminOrdersPage() {
                           ))}
                         </select>
                       </td>
-                      <td className="px-4 py-2 text-center">
+                      <td className="px-4 py-2 text-center space-x-2">
+                        <button
+                          onClick={() => toggleExpand(o._id)}
+                          className="w-[30px] h-[30px] bg-yellow-500 text-sm text-white rounded hover:bg-yellow-600 rounded-full transition"
+                        >
+                          {isExpanded(o._id) ? '▲' : '▼'}
+                        </button>
                         <button
                           onClick={() => deleteOrder(o._id)}
-                          className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition"
+                          className="h-[30px] bg-red-500 my-2 text-white px-2 py-1 rounded hover:bg-red-600 rounded-full transition"
                         >
                           Видалити
                         </button>
@@ -281,6 +317,7 @@ export default function AdminOrdersPage() {
               </motion.tbody>
             </table>
           </motion.div>
+
 
           {/* Mobile Compact Cards */}
           <motion.div
@@ -313,13 +350,13 @@ export default function AdminOrdersPage() {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => toggleExpand(o._id)}
-                        className="w-[30px] h-[30px] flex items-center justify-center bg-yellow-500 text-sm text-white rounded hover:bg-yellow-600 transition"
+                        className="w-[30px] h-[30px] flex items-center justify-center bg-yellow-500 text-sm text-white rounded-full hover:bg-yellow-600 transition"
                       >
                         {expandedOrders[o._id] ? '▲' : '▼'}
                       </button>
                       <button
                         onClick={() => deleteOrder(o._id)}
-                        className="w-[30px] h-[30px] flex items-center justify-center bg-red-500 text-sm text-white rounded hover:bg-red-600 transition"
+                        className="w-[30px] h-[30px] flex items-center justify-center bg-red-500 text-sm text-white rounded-full hover:bg-red-600 transition"
                       >
                         ✖
                       </button>
