@@ -300,13 +300,13 @@ export default function AdminOrdersPage() {
                       <td className="px-4 py-2 text-center space-x-2">
                         <button
                           onClick={() => toggleExpand(o._id)}
-                          className="w-[28px] h-[28px] bg-yellow-500 my-2 text-white px-2 py-1 rounded hover:bg-yellow-600 rounded-full transition"
+                          className="w-[28px] h-[28px] bg-yellow-600 my-2 text-white px-2 py-1 rounded hover:bg-yellow-700 rounded-full transition"
                         >
                           {isExpanded(o._id) ? '▲' : '▼'}
                         </button>
                         <button
                           onClick={() => deleteOrder(o._id)}
-                          className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 rounded-full transition"
+                          className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 rounded-full transition"
                         >
                           Видалити
                         </button>
@@ -350,13 +350,13 @@ export default function AdminOrdersPage() {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => toggleExpand(o._id)}
-                        className="w-[30px] h-[30px] flex items-center justify-center bg-yellow-500 text-sm text-white rounded-full hover:bg-yellow-600 transition"
+                        className="w-[30px] h-[30px] flex items-center justify-center bg-yellow-600 text-sm text-white rounded-full hover:bg-yellow-700 transition"
                       >
                         {expandedOrders[o._id] ? '▲' : '▼'}
                       </button>
                       <button
                         onClick={() => deleteOrder(o._id)}
-                        className="w-[30px] h-[30px] flex items-center justify-center bg-red-500 text-sm text-white rounded-full hover:bg-red-600 transition"
+                        className="w-[30px] h-[30px] flex items-center justify-center bg-red-600 text-sm text-white rounded-full hover:bg-red-700 transition"
                       >
                         ✖
                       </button>
