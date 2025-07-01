@@ -10,9 +10,10 @@ export default function CategoryCard({ category, index = 0 }) {
     const [showName, setShowName] = useState(false)
 
     const to = `/category/${category.slug}`
+
     const fallbackTimeout = useRef(null)
     const showNameTimeout = useRef(null)
-    const loadStart = useRef(Date.now())
+    const loadStart = useRef(null)
 
     useEffect(() => {
         setIsLoaded(false)
@@ -20,6 +21,7 @@ export default function CategoryCard({ category, index = 0 }) {
         setShowName(false)
         loadStart.current = Date.now()
 
+        // Safety fallback — show image anyway if nothing triggers
         fallbackTimeout.current = setTimeout(() => {
             setIsLoaded(true)
         }, MAX_WAIT)
@@ -45,7 +47,7 @@ export default function CategoryCard({ category, index = 0 }) {
         setImgError(true)
         showNameTimeout.current = setTimeout(() => {
             setShowName(true)
-        }, 400)
+        }, 300)
     }
 
     return (
@@ -62,12 +64,12 @@ export default function CategoryCard({ category, index = 0 }) {
         >
             <div className="flex flex-col h-full">
                 <div className="w-full aspect-square overflow-hidden rounded-md relative bg-gray-100">
-                    {/* shimmer */}
+                    {/* Skeleton shimmer */}
                     {!isLoaded && !imgError && (
                         <div className="absolute inset-0 rounded-md bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer z-0" />
                     )}
 
-                    {/* image */}
+                    {/* Image if no error */}
                     {!imgError && (
                         <img
                             src={category.image}
@@ -83,8 +85,8 @@ export default function CategoryCard({ category, index = 0 }) {
                         />
                     )}
 
-                    {/* name on fail */}
-                    {imgError || showName && (
+                    {/* Name fallback (shown only after shimmer timeout or error) */}
+                    {(imgError || (!isLoaded && showName)) && (
                         <div className="absolute inset-0 flex items-center justify-center text-center p-2 z-10">
                             <span className="text-gray-700 text-sm font-semibold">{category.name}</span>
                         </div>
