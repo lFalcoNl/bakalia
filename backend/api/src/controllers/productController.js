@@ -1,18 +1,27 @@
-// backend/api/src/controllers/productController.js
 const Product = require('../models/Product')
 const Order = require('../models/Order')
 const cloudinary = require('../config/cloudinary')
+const slugMap = require('../constants/slugToCategoryName')
 const Busboy = require('busboy')
-const { toUrlSafeSlug } = require('../utils/slug') // your slug helper
+const { toUrlSafeSlug } = require('../utils/slug')
 
 // GET /api/products[?category=slug]
 exports.getAll = async (req, res) => {
   try {
     let products = await Product.find().sort({ createdAt: -1 })
+
     if (req.query.category) {
       const slug = req.query.category
-      products = products.filter(p => toUrlSafeSlug(p.category) === slug)
+      const categoryName = slugMap[slug]
+
+      if (categoryName) {
+        products = products.filter(p => p.category === categoryName)
+      } else {
+        // Порожній результат, якщо slug некоректний
+        products = []
+      }
     }
+
     res.json(products)
   } catch (err) {
     console.error('productController.getAll error:', err)
@@ -36,9 +45,14 @@ exports.getById = async (req, res) => {
 exports.getByCategory = async (req, res) => {
   try {
     const { slug } = req.params
-    const all = await Product.find().sort({ createdAt: -1 })
-    const filtered = all.filter(p => toUrlSafeSlug(p.category) === slug)
-    res.json(filtered)
+    const categoryName = slugMap[slug]
+
+    if (!categoryName) {
+      return res.status(404).json({ msg: 'Категорія не знайдена' })
+    }
+
+    const products = await Product.find({ category: categoryName }).sort({ createdAt: -1 })
+    res.json(products)
   } catch (err) {
     console.error('productController.getByCategory error:', err)
     res.status(500).json({ msg: 'Помилка отримання категорії' })
@@ -56,14 +70,16 @@ async function handleUpsert(req, res, isUpdate = false) {
     fields = req.body
   } else {
     const bb = Busboy({ headers: req.headers })
-    bb.on('field', (name, val) => { fields[name] = val })
+    bb.on('field', (name, val) => {
+      fields[name] = val
+    })
     bb.on('file', (name, fileStream) => {
       if (name === 'image') {
         const publicId = isUpdate ? req.params.id : Date.now().toString()
         uploadPromise = new Promise((resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
             { folder: 'products', public_id: publicId, resource_type: 'image' },
-            (error, result) => error ? reject(error) : resolve(result.secure_url)
+            (error, result) => (error ? reject(error) : resolve(result.secure_url))
           )
           fileStream.pipe(uploadStream)
         })
@@ -81,15 +97,18 @@ async function handleUpsert(req, res, isUpdate = false) {
       name: fields.name,
       price: Number(fields.price),
       category: fields.category,
-      minOrder: Number(fields.minOrder)
+      categorySlug: toUrlSafeSlug(fields.category),
+      minOrder: fields.minOrder ? Number(fields.minOrder) : 1,
     }
+
     if (fields.image) data.image = fields.image
 
     let product
     if (isUpdate) {
-      product = await Product.findByIdAndUpdate(
-        req.params.id, data, { new: true, runValidators: true }
-      )
+      product = await Product.findByIdAndUpdate(req.params.id, data, {
+        new: true,
+        runValidators: true,
+      })
       if (!product) return res.status(404).json({ msg: 'Товар не знайдено' })
       return res.json(product)
     } else {
@@ -99,7 +118,7 @@ async function handleUpsert(req, res, isUpdate = false) {
   } catch (err) {
     console.error(`productController.${isUpdate ? 'update' : 'create'} error:`, err)
     return res.status(500).json({
-      msg: isUpdate ? 'Помилка оновлення товару' : 'Помилка створення товару'
+      msg: isUpdate ? 'Помилка оновлення товару' : 'Помилка створення товару',
     })
   }
 }
@@ -113,7 +132,7 @@ exports.remove = async (req, res) => {
     const prod = await Product.findById(req.params.id)
     if (!prod) return res.status(404).json({ msg: 'Товар не знайдено' })
 
-    // Видалення зображення з Cloudinary
+    // Cloudinary cleanup
     if (prod.image) {
       const parts = prod.image.split('/')
       const filename = parts.pop()
@@ -122,24 +141,23 @@ exports.remove = async (req, res) => {
       await cloudinary.uploader.destroy(publicId, { resource_type: 'image' })
     }
 
-    // Видалити товар лише з замовлень, які мають статус "new"
+    // Remove product from new orders
     await Order.updateMany(
       {
         'products.productId': prod._id,
-        status: 'new' // тільки зі статусом "new"
+        status: 'new',
       },
       {
-        $pull: { products: { productId: prod._id } }
+        $pull: { products: { productId: prod._id } },
       }
     )
 
-    // Видалити порожні замовлення, лише якщо вони також зі статусом "new"
+    // Remove empty new orders
     await Order.deleteMany({
       products: { $size: 0 },
-      status: 'new'
+      status: 'new',
     })
 
-    // Видалити сам товар
     await prod.deleteOne()
 
     res.json({ msg: 'Товар і зображення видалені' })
@@ -148,4 +166,3 @@ exports.remove = async (req, res) => {
     res.status(500).json({ msg: 'Помилка видалення товару' })
   }
 }
-
