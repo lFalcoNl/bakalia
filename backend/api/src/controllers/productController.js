@@ -113,24 +113,39 @@ exports.remove = async (req, res) => {
     const prod = await Product.findById(req.params.id)
     if (!prod) return res.status(404).json({ msg: 'Товар не знайдено' })
 
+    // Видалення зображення з Cloudinary
     if (prod.image) {
       const parts = prod.image.split('/')
-      const filename = parts.pop()               // e.g. "123456789.jpg"
-      const folder = parts.pop()               // e.g. "products"
+      const filename = parts.pop()
+      const folder = parts.pop()
       const publicId = `${folder}/${filename.split('.').shift()}`
       await cloudinary.uploader.destroy(publicId, { resource_type: 'image' })
     }
 
+    // Видалити товар лише з замовлень, які мають статус "new"
     await Order.updateMany(
-      { 'products.productId': prod._id },
-      { $pull: { products: { productId: prod._id } } }
+      {
+        'products.productId': prod._id,
+        status: 'new' // тільки зі статусом "new"
+      },
+      {
+        $pull: { products: { productId: prod._id } }
+      }
     )
-    await Order.deleteMany({ products: { $size: 0 } })
 
+    // Видалити порожні замовлення, лише якщо вони також зі статусом "new"
+    await Order.deleteMany({
+      products: { $size: 0 },
+      status: 'new'
+    })
+
+    // Видалити сам товар
     await prod.deleteOne()
+
     res.json({ msg: 'Товар і зображення видалені' })
   } catch (err) {
     console.error('productController.remove error:', err)
     res.status(500).json({ msg: 'Помилка видалення товару' })
   }
 }
+

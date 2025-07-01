@@ -283,37 +283,29 @@ export default function AdminOrdersPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-2 whitespace-normal max-h-32 overflow-y-auto">
+                      <td className="px-4 py-2 whitespace-normal lg:max-h-64 lg:overflow-y-auto">
                         {isExpanded(o._id) && (
-                          <ul className="divide-y divide-gray-200 space-y-1">
+                          <ul className="divide-y divide-gray-200 space-y-1 pr-1">
                             {o.products.map((p, i) => (
                               <li
                                 key={i}
-                                className="flex justify-between items-start"
+                                className="flex justify-between items-start gap-2"
                               >
-                                <span className="flex-1 pr-4 break-words">
+                                <span className="flex-1 break-words text-sm max-w-[60%]">
                                   {p.name}
                                 </span>
-                                <div className="flex items-center space-x-3">
-                                  <div className="text-right">
-                                    <div className="text-sm font-medium">
-                                      {computeSubtotal(p)} ₴
-                                    </div>
+                                <div className="flex items-end flex-shrink-0 space-x-2 text-sm">
+                                  <div className="text-right whitespace-nowrap">
+                                    <div className="font-medium">{computeSubtotal(p)} ₴</div>
                                     <div className="text-xs text-gray-600 font-bold">
-                                      [
-                                      {round1(
-                                        computeSubtotal(p) / (p.price || 1)
-                                      )}
-                                      ×{p.price}₴]
+                                      [{round1(computeSubtotal(p) / (p.price || 1))}×{p.price}₴]
                                     </div>
                                   </div>
                                   <button
-                                    onClick={() =>
-                                      removeItem(o._id, p.productId)
-                                    }
-                                    className="p-2 rounded hover:bg-gray-100 text-red-500 flex items-center justify-center"
+                                    onClick={() => removeItem(o._id, p.productId)}
+                                    className="p-2 rounded hover:bg-gray-100 flex items-center"
                                   >
-                                    <FiTrash2 size={16} />
+                                    <FiTrash2 className="text-red-500" size={16} />
                                   </button>
                                 </div>
                               </li>
@@ -321,6 +313,7 @@ export default function AdminOrdersPage() {
                           </ul>
                         )}
                       </td>
+
                       <td className="px-4 py-2 text-right font-semibold">
                         {total} ₴
                       </td>
@@ -426,14 +419,17 @@ export default function AdminOrdersPage() {
                         {o.products.map((p, i) => (
                           <li
                             key={i}
-                            className="flex justify-between items-center py-1"
+                            className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 py-1 w-full"
                           >
-                            <span className="truncate">{p.name}</span>
-                            <div className="flex items-center space-x-2">
-                              <div className="text-right">
-                                <div className="font-medium">
-                                  {computeSubtotal(p)} ₴
-                                </div>
+                            {/* Назва товару з перенесенням */}
+                            <span className="break-words whitespace-normal text-sm w-full sm:max-w-[55%]">
+                              {p.name}
+                            </span>
+
+                            {/* Ціна та кнопка видалення */}
+                            <div className="flex items-end justify-between sm:justify-end w-full sm:w-auto space-x-2">
+                              <div className="text-right whitespace-nowrap text-sm">
+                                <div className="font-medium">{computeSubtotal(p)} ₴</div>
                                 <div className="text-xs text-gray-600 font-bold">
                                   [{round1(computeSubtotal(p) / (p.price || 1))}×{p.price}₴]
                                 </div>
@@ -446,6 +442,8 @@ export default function AdminOrdersPage() {
                               </button>
                             </div>
                           </li>
+
+
                         ))}
                       </ul>
                       <div className="flex justify-between items-center mb-2 text-sm">
