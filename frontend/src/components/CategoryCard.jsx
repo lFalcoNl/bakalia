@@ -2,36 +2,43 @@ import React, { useState, useRef, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 
 const MIN_DELAY = 200
-const MAX_WAIT = 1500 // максимум скільки чекаємо навіть без onLoad
+const MAX_WAIT = 1500
 
-export default function CategoryCard({ category }) {
+export default function CategoryCard({ category, index = 0 }) {
     const [isLoaded, setIsLoaded] = useState(false)
     const [imgError, setImgError] = useState(false)
-    const mountRef = useRef(Date.now())
+
+    const mountTime = useRef(Date.now())
     const timeoutRef = useRef(null)
+    const unmounted = useRef(false)
 
     const to = `/category/${category.slug}`
 
     useEffect(() => {
-        mountRef.current = Date.now()
         setIsLoaded(false)
         setImgError(false)
+        mountTime.current = Date.now()
+        unmounted.current = false
 
-        // Безпечний таймер, якщо onLoad не спрацює
+        // Safety fallback in case onLoad doesn’t fire
         timeoutRef.current = setTimeout(() => {
-            setIsLoaded(true)
+            if (!unmounted.current) setIsLoaded(true)
         }, MAX_WAIT)
 
         return () => {
             clearTimeout(timeoutRef.current)
+            unmounted.current = true
         }
     }, [category.image])
 
     const handleLoad = () => {
         clearTimeout(timeoutRef.current)
-        const elapsed = Date.now() - mountRef.current
+        const elapsed = Date.now() - mountTime.current
         const delay = Math.max(0, MIN_DELAY - elapsed)
-        setTimeout(() => setIsLoaded(true), delay)
+
+        setTimeout(() => {
+            if (!unmounted.current) setIsLoaded(true)
+        }, delay)
     }
 
     return (
@@ -48,8 +55,9 @@ export default function CategoryCard({ category }) {
       `}
         >
             <div className="flex flex-col h-full">
+                {/* Image with skeleton */}
                 <div className="w-full aspect-square overflow-hidden rounded-md relative bg-gray-100">
-                    {/* shimmer skeleton */}
+                    {/* shimmer */}
                     <div
                         className={`
               absolute inset-0 rounded-md
@@ -58,28 +66,26 @@ export default function CategoryCard({ category }) {
               ${isLoaded ? 'opacity-0 transition-opacity duration-500' : 'opacity-100'}
             `}
                     />
-                    {!imgError && (
+                    {!imgError ? (
                         <img
                             src={category.image}
                             alt={category.name}
-                            loading="lazy"
+                            loading={index < 6 ? 'eager' : 'lazy'}
                             onLoad={handleLoad}
                             onError={() => setImgError(true)}
                             className={`
                 w-full h-full object-cover
-                transform transition-all duration-700 ease-out
+                transition-all duration-700 ease-out
                 ${isLoaded ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-105 blur-sm'}
               `}
                         />
-                    )}
-
-                    {/* fallback if image failed */}
-                    {imgError && (
+                    ) : (
                         <div className="w-full h-full flex items-center justify-center text-sm text-gray-500">
                             Зображення недоступне
                         </div>
                     )}
 
+                    {/* glow on hover */}
                     <div className="
             pointer-events-none
             absolute inset-0 rounded-md
@@ -89,6 +95,7 @@ export default function CategoryCard({ category }) {
           " />
                 </div>
 
+                {/* Category name */}
                 <div className="mt-3 flex-grow flex items-center justify-center min-h-[40px]">
                     <span className="
             block text-sm font-medium text-gray-800
