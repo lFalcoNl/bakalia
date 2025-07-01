@@ -276,7 +276,9 @@ export default function CartPage() {
                     <button
                       onClick={() => { if (window.confirm('Видалити товар з корзини?')) removeItem(id) }}
                       className="text-red-600 text-2xl font-bold p-1 hover:text-red-800" aria-label="Видалити"
-                    >×</button>
+                    >
+                      <FiTrash2 className="w-4 h-5" />
+                    </button>
                   </div>
                   <div className="grid grid-cols-3 items-center gap-4 text-sm">
                     <div>

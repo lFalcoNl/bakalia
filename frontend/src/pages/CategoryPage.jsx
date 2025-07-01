@@ -27,11 +27,6 @@ export default function CategoryPage() {
         )
     }
 
-    // 1) Scroll to top on category change
-    useEffect(() => {
-        window.scrollTo(0, 0)
-    }, [slug])
-
     // 2) Fetch only this category’s products
     const fetchProducts = useCallback(async () => {
         setLoading(true)

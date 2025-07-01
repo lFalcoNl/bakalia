@@ -39,6 +39,12 @@ export default function LoginPage() {
 
   const handleReset = async e => {
     e.preventDefault();
+
+    if (newPassword !== confirm) {
+      addNotification('Паролі не збігаються');
+      return;
+    }
+
     setLoading(true);
     try {
       await api.post('/auth/forgot-password', { phone, newPassword, confirm });
@@ -46,8 +52,11 @@ export default function LoginPage() {
       setIsReset(false);
     } catch {
       addNotification('Не вдалося подати запит. Спробуйте пізніше.');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
+  
 
   return (
     <div className="flex justify-center items-center min-h-[60vh] px-4">

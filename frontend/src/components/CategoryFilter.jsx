@@ -15,7 +15,7 @@ export default function CategoryFilter({ categories }) {
             key={c.slug}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05, duration: 0.4 }}
+            transition={{ delay: index * 0.025, duration: 0.4 }}
           >
             <CategoryCard category={c} />
           </motion.div>

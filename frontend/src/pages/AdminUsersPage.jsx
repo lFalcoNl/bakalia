@@ -126,7 +126,7 @@ export default function AdminUsersPage() {
     <div className="p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Управління користувачами</h1>
+        <h1 className="text-2xl font-semibold">Користувач</h1>
         <button
           onClick={fetchUsers}
           disabled={refreshing}
@@ -268,68 +268,73 @@ export default function AdminUsersPage() {
           </div>
 
           {/* Mobile Cards */}
-          <div className="md:hidden space-y-3">
-            {sortedUsers.map(u => {
-              const days = computeDays(u)
-              return (
-                <div
-                  key={u._id}
-                  className="bg-white p-3 rounded shadow flex flex-col space-y-2"
-                >
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {u.surname} · {u.phone}
-                      </p>
-                      <p className="text-xs text-gray-600 truncate">{u.street}</p>
+            <div className="md:hidden space-y-3">
+              {sortedUsers.map(u => {
+                const days = computeDays(u)
+                return (
+                  <div
+                    key={u._id}
+                    className="bg-white p-3 rounded shadow flex flex-col space-y-2"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start sm:gap-3 space-y-2 sm:space-y-0">
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {u.surname} · {u.phone}
+                        </p>
+                        <p className="text-xs text-gray-600 truncate">{u.street}</p>
+                      </div>
+
+                      {/* Buttons */}
+                      <div className="flex flex-wrap justify-end gap-2">
+                        {u.resetRequested && (
+                          <>
+                            <button
+                              onClick={() => approveReset(u._id)}
+                              className="w-8 h-8 flex items-center justify-center rounded text-blue-500 hover:text-blue-700"
+                              title="Підтвердити скидання"
+                            >
+                              <FiCheck className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => rejectReset(u._id)}
+                              className="w-8 h-8 flex items-center justify-center rounded text-yellow-500 hover:text-yellow-700"
+                              title="Відхилити скидання"
+                            >
+                              <FiX className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                        {!u.isApproved && (
+                          <button
+                            onClick={() => approveUser(u._id)}
+                            className="w-8 h-8 flex items-center justify-center rounded text-green-500 hover:text-green-700"
+                            title="Підтвердити"
+                          >
+                            <FiCheck className="w-4 h-4" />
+                          </button>
+                        )}
+                        {u.role !== 'admin' && (
+                          <button
+                            onClick={() => deleteUser(u._id, u.role)}
+                            className="w-8 h-8 flex items-center justify-center rounded text-red-500 hover:text-red-700"
+                            title="Видалити"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2 ml-2">
-                      {u.resetRequested && (
-                        <>
-                          <button
-                            onClick={() => approveReset(u._id)}
-                            className="p-2 rounded text-blue-500 hover:text-blue-700 focus:outline-none"
-                            title="Підтвердити скидання"
-                          >
-                            <FiCheck />
-                          </button>
-                          <button
-                            onClick={() => rejectReset(u._id)}
-                            className="p-2 rounded text-yellow-500 hover:text-yellow-700 focus:outline-none"
-                            title="Відхилити скидання"
-                          >
-                            <FiX />
-                          </button>
-                        </>
-                      )}
-                      {!u.isApproved && (
-                        <button
-                          onClick={() => approveUser(u._id)}
-                          className="p-2 rounded text-green-500 hover:text-green-700 focus:outline-none"
-                          title="Підтвердити"
-                        >
-                          <FiCheck />
-                        </button>
-                      )}
-                      {u.role !== 'admin' && (
-                        <button
-                          onClick={() => deleteUser(u._id, u.role)}
-                          className="p-2 rounded text-red-500 hover:text-red-700 focus:outline-none"
-                          title="Видалити"
-                        >
-                          <FiTrash2 />
-                        </button>
-                      )}
+
+                    <div className="flex justify-between text-xs text-gray-700">
+                      <span>{u.role}</span>
+                      <span>{days === Infinity ? '∞ дн.' : `${days} дн.`}</span>
                     </div>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-700">
-                    <span>{u.role}</span>
-                    <span>{days === Infinity ? '∞ дн.' : `${days} дн.`}</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+
         </>
       )}
     </div>

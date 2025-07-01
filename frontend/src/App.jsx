@@ -16,11 +16,14 @@ import AdminProducts from './pages/AdminProductsPage'
 import AdminOrders from './pages/AdminOrdersPage'
 import AdminUsers from './pages/AdminUsersPage'
 import PrintPage from './pages/PrintPage'
+import ScrollToTop from './components/ScrollToTop'
 
 export default function App() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <NavBar />
+
+      <ScrollToTop /> {/* 👈 обов’язково всередині Router, але над Routes */}
 
       <main className="flex-grow w-full max-w-[1300px] mx-auto px-4 py-6 bg-white rounded-lg shadow-sm">
         <Routes>
@@ -50,9 +53,8 @@ export default function App() {
       </main>
 
       <Footer />
-
-      {/* Scroll-to-Top Button (appears after scrolling past viewport height) */}
       <ScrollToTopButton />
     </div>
   )
 }
+

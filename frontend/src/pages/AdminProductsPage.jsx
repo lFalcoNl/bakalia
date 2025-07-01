@@ -178,7 +178,7 @@ export default function AdminProductsPage() {
     <div className="p-4 flex flex-col min-h-screen">
       {/* HEADER */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Управління товарами</h1>
+        <h1 className="text-2xl font-bold">Товари</h1>
         <div className="flex items-center space-x-3">
           <button
             onClick={() => navigate('/admin/print')}

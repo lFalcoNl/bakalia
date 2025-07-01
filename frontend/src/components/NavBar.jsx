@@ -77,7 +77,7 @@ export default function NavBar() {
               alt="Logo"
               className="h-8 md:h-10 rounded"
             />
-            <span className="text-xl md:text-2xl font-bold whitespace-nowrap">
+            <span className="font-bold text-sm sm:text-base md:text-xl lg:text-xl xl:text-xl leading-tight break-words max-w-[200px] sm:max-w-[180px] md:max-w-none">
               Бакалійний Двір
             </span>
           </NavLink>
@@ -138,20 +138,16 @@ export default function NavBar() {
             {/* User / Auth */}
             {user ? (
               <div className="flex items-center space-x-4 whitespace-nowrap">
-
-                <div className="flex items-center space-x-2 max-w-[140px]">
+                
+                <div className="flex items-center space-x-2 max-w-[140px] overflow-hidden">
                   <FiUser className="text-secondary flex-shrink-0" />
                   <div
-                    className="text-accent font-semibold leading-tight break-words whitespace-normal overflow-hidden"
-                    style={{
-                      fontSize: `clamp(9px, ${140 / user.surname.length}px, 14px)`,
-                      lineHeight: '1.2',
-                    }}
+                    className="text-accent font-semibold text-xs leading-tight whitespace-nowrap overflow-hidden truncate"
+                    title={user.surname}
                   >
-                    {user.surname}
+                    {user.surname.split(' ')[0]}
                   </div>
                 </div>
-
 
 
 
@@ -227,16 +223,13 @@ export default function NavBar() {
           <div className="flex items-center space-x-4 xl:hidden">
             {user && (
               <div className="flex items-center space-x-1 whitespace-nowrap">
-                <div className="flex items-center space-x-2 max-w-[140px]">
+                <div className="flex items-center space-x-2 max-w-[140px] overflow-hidden">
                   <FiUser className="text-secondary flex-shrink-0" />
                   <div
-                    className="text-accent font-semibold leading-tight break-words whitespace-normal overflow-hidden"
-                    style={{
-                      fontSize: `clamp(9px, ${140 / user.surname.length}px, 14px)`,
-                      lineHeight: '1.2',
-                    }}
+                    className="text-accent font-semibold text-xs leading-tight whitespace-nowrap overflow-hidden truncate"
+                    title={user.surname}
                   >
-                    {user.surname}
+                    {user.surname.split(' ')[0]}
                   </div>
                 </div>
               </div>

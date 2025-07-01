@@ -171,8 +171,8 @@ export default function AdminOrdersPage() {
   return (
     <div className="p-4">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
-        <h1 className="text-2xl font-semibold">Управління замовленнями</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">Замовлення</h1>
         <div className="flex items-center space-x-2">
           {/* Toggle All */}
           <button
