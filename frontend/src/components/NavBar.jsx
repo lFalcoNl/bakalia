@@ -138,10 +138,24 @@ export default function NavBar() {
             {/* User / Auth */}
             {user ? (
               <div className="flex items-center space-x-4 whitespace-nowrap">
-                <div className="flex items-center space-x-1">
-                  <FiUser className="text-secondary" />
-                  <span className="text-accent font-semibold">{user.surname}</span>
+
+                <div className="flex items-center space-x-2 max-w-[140px]">
+                  <FiUser className="text-secondary flex-shrink-0" />
+                  <div
+                    className="text-accent font-semibold leading-tight break-words whitespace-normal overflow-hidden"
+                    style={{
+                      fontSize: `clamp(9px, ${140 / user.surname.length}px, 14px)`,
+                      lineHeight: '1.2',
+                    }}
+                  >
+                    {user.surname}
+                  </div>
                 </div>
+
+
+
+
+
                 <motion.button
                   onClick={() => {
                     logout()
@@ -213,8 +227,18 @@ export default function NavBar() {
           <div className="flex items-center space-x-4 xl:hidden">
             {user && (
               <div className="flex items-center space-x-1 whitespace-nowrap">
-                <FiUser className="text-secondary" />
-                <span className="text-accent font-semibold">{user.surname}</span>
+                <div className="flex items-center space-x-2 max-w-[140px]">
+                  <FiUser className="text-secondary flex-shrink-0" />
+                  <div
+                    className="text-accent font-semibold leading-tight break-words whitespace-normal overflow-hidden"
+                    style={{
+                      fontSize: `clamp(9px, ${140 / user.surname.length}px, 14px)`,
+                      lineHeight: '1.2',
+                    }}
+                  >
+                    {user.surname}
+                  </div>
+                </div>
               </div>
             )}
             <button
@@ -235,7 +259,6 @@ export default function NavBar() {
                 </div>
               )}
             </button>
-
           </div>
         </div>
       </motion.header>
