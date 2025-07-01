@@ -5,7 +5,7 @@ import { FiPhone, FiMail } from 'react-icons/fi'
 export default function Footer() {
   return (
     <footer className="bg-primary text-accent border-t border-secondary mt-auto">
-      <div className="py-6 flex flex-col md:flex-row items-center justify-between w-full px-4">
+      <div className="max-w-7xl mx-auto py-6 flex flex-col md:flex-row items-center justify-between w-full px-4">
         <Link to="/" className="mb-6 md:mb-0">
           <img
             src="/images/logo/mainLogo.png"
