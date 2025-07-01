@@ -34,7 +34,7 @@ export default function CategoryCard({ category, index = 0 }) {
             unmounted.current = true
         }
     }, [category.image])
-      
+
 
     const handleLoad = () => {
         clearTimeout(timeoutRef.current)
@@ -75,6 +75,7 @@ export default function CategoryCard({ category, index = 0 }) {
                         <img
                             src={category.image}
                             alt={category.name}
+                            key={category.image}
                             loading={index < 6 ? 'eager' : 'lazy'}
                             onLoad={handleLoad}
                             crossOrigin="anonymous"
