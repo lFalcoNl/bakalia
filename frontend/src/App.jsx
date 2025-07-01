@@ -25,7 +25,7 @@ export default function App() {
 
       <ScrollToTop /> {/* 👈 обов’язково всередині Router, але над Routes */}
 
-      <main className="flex-grow w-full max-w-[1300px] mx-auto px-4 py-6 bg-white rounded-lg shadow-sm">
+      <main className="flex-grow w-full max-w-[1300px] mx-auto px-4 py-6">
         <Routes>
           {/* public */}
           <Route path="/login" element={<LoginPage />} />

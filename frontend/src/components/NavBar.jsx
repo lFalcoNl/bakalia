@@ -60,10 +60,10 @@ export default function NavBar() {
     <>
       {/* Header */}
       <motion.header
-        className="sticky top-0 z-50 bg-primary text-accent shadow"
+        className="sticky top-0 z-50 bg-primary text-accent border-b border-secondary"
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        transition={{ type: 'tween', duration: 0.3, ease: 'easeOut'}}
       >
         <div className="max-w-7xl mx-auto flex items-center h-16 px-4">
           {/* Logo */}
