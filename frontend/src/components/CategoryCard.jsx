@@ -84,7 +84,7 @@ export default function CategoryCard({ category, index = 0 }) {
                     )}
 
                     {/* name on fail */}
-                    {imgError && showName && (
+                    {imgError || showName && (
                         <div className="absolute inset-0 flex items-center justify-center text-center p-2 z-10">
                             <span className="text-gray-700 text-sm font-semibold">{category.name}</span>
                         </div>
