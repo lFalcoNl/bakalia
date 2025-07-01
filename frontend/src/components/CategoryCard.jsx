@@ -7,44 +7,46 @@ const MAX_WAIT = 2000
 export default function CategoryCard({ category, index = 0 }) {
     const [isLoaded, setIsLoaded] = useState(false)
     const [imgError, setImgError] = useState(false)
+    const [showName, setShowName] = useState(false)
 
-    const mountedRef = useRef(true)
+    const to = `/category/${category.slug}`
     const fallbackTimeout = useRef(null)
+    const showNameTimeout = useRef(null)
+    const loadStart = useRef(Date.now())
 
     useEffect(() => {
-        mountedRef.current = true
         setIsLoaded(false)
         setImgError(false)
+        setShowName(false)
+        loadStart.current = Date.now()
 
-        const img = new Image()
-        img.src = category.image
-
-        const startTime = Date.now()
-
-        img.onload = () => {
-            const elapsed = Date.now() - startTime
-            const delay = Math.max(0, MIN_DELAY - elapsed)
-            setTimeout(() => {
-                if (mountedRef.current) setIsLoaded(true)
-            }, delay)
-        }
-
-        img.onerror = () => {
-            if (mountedRef.current) setImgError(true)
-        }
-
-        // fallback in case onload doesn't fire
         fallbackTimeout.current = setTimeout(() => {
-            if (mountedRef.current && !imgError) setIsLoaded(true)
+            setIsLoaded(true)
         }, MAX_WAIT)
 
         return () => {
-            mountedRef.current = false
             clearTimeout(fallbackTimeout.current)
+            clearTimeout(showNameTimeout.current)
         }
     }, [category.image])
 
-    const to = `/category/${category.slug}`
+    const handleLoad = () => {
+        clearTimeout(fallbackTimeout.current)
+        const elapsed = Date.now() - loadStart.current
+        const delay = Math.max(0, MIN_DELAY - elapsed)
+
+        setTimeout(() => {
+            setIsLoaded(true)
+        }, delay)
+    }
+
+    const handleError = () => {
+        clearTimeout(fallbackTimeout.current)
+        setImgError(true)
+        showNameTimeout.current = setTimeout(() => {
+            setShowName(true)
+        }, 400)
+    }
 
     return (
         <NavLink
@@ -60,7 +62,7 @@ export default function CategoryCard({ category, index = 0 }) {
         >
             <div className="flex flex-col h-full">
                 <div className="w-full aspect-square overflow-hidden rounded-md relative bg-gray-100">
-                    {/* shimmer while loading */}
+                    {/* shimmer */}
                     {!isLoaded && !imgError && (
                         <div className="absolute inset-0 rounded-md bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer z-0" />
                     )}
@@ -71,6 +73,8 @@ export default function CategoryCard({ category, index = 0 }) {
                             src={category.image}
                             alt={category.name}
                             loading={index < 6 ? 'eager' : 'lazy'}
+                            onLoad={handleLoad}
+                            onError={handleError}
                             className={`
                 absolute inset-0 w-full h-full object-cover
                 transition-all duration-500 ease-out
@@ -79,8 +83,8 @@ export default function CategoryCard({ category, index = 0 }) {
                         />
                     )}
 
-                    {/* fallback name in center */}
-                    {imgError && (
+                    {/* name on fail */}
+                    {imgError && showName && (
                         <div className="absolute inset-0 flex items-center justify-center text-center p-2 z-10">
                             <span className="text-gray-700 text-sm font-semibold">{category.name}</span>
                         </div>
