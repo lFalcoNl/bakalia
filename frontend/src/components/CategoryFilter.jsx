@@ -17,9 +17,10 @@ export default function CategoryFilter({ categories }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.025, duration: 0.4 }}
           >
-            <CategoryCard category={c} />
+            <CategoryCard category={c} index={index} />
           </motion.div>
         ))}
+
       </div>
     </section>
   )

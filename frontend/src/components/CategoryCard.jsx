@@ -20,7 +20,11 @@ export default function CategoryCard({ category, index = 0 }) {
         mountTime.current = Date.now()
         unmounted.current = false
 
-        // Safety fallback in case onLoad doesn’t fire
+        const img = new Image()
+        img.src = category.image
+        img.onload = handleLoad
+        img.onerror = () => setImgError(true)
+
         timeoutRef.current = setTimeout(() => {
             if (!unmounted.current) setIsLoaded(true)
         }, MAX_WAIT)
@@ -30,6 +34,7 @@ export default function CategoryCard({ category, index = 0 }) {
             unmounted.current = true
         }
     }, [category.image])
+      
 
     const handleLoad = () => {
         clearTimeout(timeoutRef.current)
@@ -72,6 +77,7 @@ export default function CategoryCard({ category, index = 0 }) {
                             alt={category.name}
                             loading={index < 6 ? 'eager' : 'lazy'}
                             onLoad={handleLoad}
+                            crossOrigin="anonymous"
                             onError={() => setImgError(true)}
                             className={`
                 w-full h-full object-cover
