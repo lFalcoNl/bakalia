@@ -162,40 +162,53 @@ export default function PrintPage() {
                     <p className="mt-4 text-gray-500">Завантаження товарів…</p>
                 </div>
             ) : (
-                <div className="overflow-x-auto">
-                    <table
-                        className={`min-w-full table-auto border border-gray-300 ${textSizeClass}`}
-                    >
-                        <thead>
-                            <tr className="bg-gray-100 print:bg-white">
-                                    <th className="border p-[2px] text-center">№</th>
-                                    <th className="border p-[2px] text-left whitespace-normal">
-                                    Назва{getSortIndicator('name')}
-                                </th>
-                                    <th className="border p-[2px] text-left whitespace-normal">
-                                    Категорія{getSortIndicator('category')}
-                                </th>
-                                    <th className="border p-[2px] text-left whitespace-normal">
-                                    Мін. кількість{getSortIndicator('minOrder')}
-                                </th>
-                                    <th className="border p-[2px] text-left whitespace-normal">
-                                    Ціна{getSortIndicator('price')}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredProducts.map((p, index) => (
-                                <tr key={p._id} className="even:bg-gray-50">
-                                    <td className="border p-[2px] text-center">{index + 1}</td>
-                                    <td className="border p-[2px]">{p.name}</td>
-                                    <td className="border p-[2px]">{p.category}</td>
-                                    <td className="border p-[2px]">{p.minOrder}</td>
-                                    <td className="border p-[2px]">{p.price} ₴</td>
+                    <div className="overflow-x-auto border rounded-md shadow">
+                        <table
+                            className={`min-w-full table-auto border ${textSizeClass}`}
+                        >
+                            <thead>
+                                <tr className="text-primary print:bg-white">
+                                    <th className="border p-2 text-center">№</th>
+                                    <th
+                                        onClick={() => requestSort('name')}
+                                        className="border p-2 text-left cursor-pointer hover:bg-primary/10 transition"
+                                    >
+                                        Назва{getSortIndicator('name')}
+                                    </th>
+                                    <th
+                                        onClick={() => requestSort('category')}
+                                        className="border p-2 text-left cursor-pointer hover:bg-primary/10 transition"
+                                    >
+                                        Категорія{getSortIndicator('category')}
+                                    </th>
+                                    <th
+                                        onClick={() => requestSort('minOrder')}
+                                        className="border p-2 text-left cursor-pointer hover:bg-primary/10 transition"
+                                    >
+                                        Мін. кількість{getSortIndicator('minOrder')}
+                                    </th>
+                                    <th
+                                        onClick={() => requestSort('price')}
+                                        className="border p-2 text-left cursor-pointer hover:bg-primary/10 transition"
+                                    >
+                                        Ціна{getSortIndicator('price')}
+                                    </th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {filteredProducts.map((p, index) => (
+                                    <tr key={p._id} className="even:bg-accent/20">
+                                        <td className="border p-2 text-center">{index + 1}</td>
+                                        <td className="border p-2">{p.name}</td>
+                                        <td className="border p-2">{p.category}</td>
+                                        <td className="border p-2">{p.minOrder}</td>
+                                        <td className="border p-2">{p.price} ₴</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
             )}
 
         </div>
