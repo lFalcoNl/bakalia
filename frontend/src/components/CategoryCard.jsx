@@ -2,27 +2,37 @@ import React, { useState, useRef, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 
 const MIN_DELAY = 200
+const MAX_WAIT = 1500 // максимум скільки чекаємо навіть без onLoad
 
 export default function CategoryCard({ category }) {
     const [isLoaded, setIsLoaded] = useState(false)
+    const [imgError, setImgError] = useState(false)
     const mountRef = useRef(Date.now())
+    const timeoutRef = useRef(null)
+
     const to = `/category/${category.slug}`
 
-    const handleLoad = () => {
-        const elapsed = Date.now() - mountRef.current
-        if (elapsed >= MIN_DELAY) {
-            setIsLoaded(true)
-        } else {
-            setTimeout(() => setIsLoaded(true), MIN_DELAY - elapsed)
-        }
-    }
-
     useEffect(() => {
-        if (category.image) {
-            mountRef.current = Date.now()
-            setIsLoaded(false)
+        mountRef.current = Date.now()
+        setIsLoaded(false)
+        setImgError(false)
+
+        // Безпечний таймер, якщо onLoad не спрацює
+        timeoutRef.current = setTimeout(() => {
+            setIsLoaded(true)
+        }, MAX_WAIT)
+
+        return () => {
+            clearTimeout(timeoutRef.current)
         }
     }, [category.image])
+
+    const handleLoad = () => {
+        clearTimeout(timeoutRef.current)
+        const elapsed = Date.now() - mountRef.current
+        const delay = Math.max(0, MIN_DELAY - elapsed)
+        setTimeout(() => setIsLoaded(true), delay)
+    }
 
     return (
         <NavLink
@@ -38,7 +48,6 @@ export default function CategoryCard({ category }) {
       `}
         >
             <div className="flex flex-col h-full">
-                {/* Зображення */}
                 <div className="w-full aspect-square overflow-hidden rounded-md relative bg-gray-100">
                     {/* shimmer skeleton */}
                     <div
@@ -49,18 +58,28 @@ export default function CategoryCard({ category }) {
               ${isLoaded ? 'opacity-0 transition-opacity duration-500' : 'opacity-100'}
             `}
                     />
-                    <img
-                        src={category.image}
-                        alt={category.name}
-                        onLoad={handleLoad}
-                        loading="lazy"
-                        className={`
-              w-full h-full object-cover
-              transform transition-all duration-700 ease-out
-              ${isLoaded ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-105 blur-sm'}
-            `}
-                    />
-                    {/* hover pulse */}
+                    {!imgError && (
+                        <img
+                            src={category.image}
+                            alt={category.name}
+                            loading="lazy"
+                            onLoad={handleLoad}
+                            onError={() => setImgError(true)}
+                            className={`
+                w-full h-full object-cover
+                transform transition-all duration-700 ease-out
+                ${isLoaded ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-105 blur-sm'}
+              `}
+                        />
+                    )}
+
+                    {/* fallback if image failed */}
+                    {imgError && (
+                        <div className="w-full h-full flex items-center justify-center text-sm text-gray-500">
+                            Зображення недоступне
+                        </div>
+                    )}
+
                     <div className="
             pointer-events-none
             absolute inset-0 rounded-md
@@ -70,7 +89,6 @@ export default function CategoryCard({ category }) {
           " />
                 </div>
 
-                {/* Текст */}
                 <div className="mt-3 flex-grow flex items-center justify-center min-h-[40px]">
                     <span className="
             block text-sm font-medium text-gray-800
