@@ -75,6 +75,7 @@ export default function NavBar() {
             <img
               src="/images/logo/noSignLogo.png"
               alt="Logo"
+              loading='lazy'
               className="h-8 md:h-10 rounded"
             />
             <span className="font-bold text-sm sm:text-base md:text-xl lg:text-xl xl:text-xl leading-tight break-words max-w-[200px] sm:max-w-[180px] md:max-w-none">

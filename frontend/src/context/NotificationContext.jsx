@@ -20,13 +20,10 @@ export const NotificationProvider = ({ children }) => {
 
   const addNotification = useCallback((msg) => {
     setNotifs((prev) => {
-      // Якщо таке саме повідомлення вже є — нічого не робимо
       if (prev.some(n => n.msg === msg)) return prev;
 
       const id = Date.now();
-      // Запускаємо видалення через 5 с
       const timeoutId = setTimeout(() => removeNotification(id), 5000);
-
       return [...prev, { id, msg, timeoutId }];
     });
   }, [removeNotification]);
@@ -34,14 +31,21 @@ export const NotificationProvider = ({ children }) => {
   return (
     <NotificationContext.Provider value={{ addNotification }}>
       {children}
-      <div className="fixed bottom-4 right-4 space-y-2 z-50">
+
+      <div className="fixed bottom-4 right-4 sm:right-6 sm:bottom-6 max-w-full sm:max-w-sm w-[90vw] sm:w-auto z-50 space-y-2 pointer-events-none">
         {notifs.map(n => (
           <div
             key={n.id}
-            className="bg-green-500 text-white px-4 py-2 rounded shadow-lg flex justify-between items-center"
+            role="alert"
+            aria-live="polite"
+            className="pointer-events-auto animate-fade-in bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg flex justify-between items-center"
           >
-            <span>{n.msg}</span>
-            <button onClick={() => removeNotification(n.id)} className="ml-4 font-bold">
+            <span className="text-sm">{n.msg}</span>
+            <button
+              onClick={() => removeNotification(n.id)}
+              className="ml-4 text-white hover:text-gray-200 font-bold"
+              aria-label="Закрити сповіщення"
+            >
               &times;
             </button>
           </div>

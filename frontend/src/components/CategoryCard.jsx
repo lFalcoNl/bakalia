@@ -63,7 +63,6 @@ export default function CategoryCard({ category, index = 0 }) {
         hover:-translate-y-1 hover:shadow-lg active:scale-95
         focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/50
         ${isActive ? 'border-primary ring-2 ring-primary' : 'border-gray-200'}
-        p-4 text-center
       `}
         >
             <div className="flex flex-col h-full">

@@ -10,6 +10,7 @@ export default function Footer() {
           <img
             src="/images/logo/mainLogo.png"
             alt="Logo"
+            loading='lazy'
             className="h-20 w-auto rounded-md shadow-sm transition-opacity hover:opacity-90"
           />
         </Link>
