@@ -4,9 +4,12 @@ const User = require('../models/User')
 const Product = require('../models/Product')
 const Order = require('../models/Order')
 
+const auth = require('../middleware/auth')
+const roles = require('../middleware/roles')
+
 const router = express.Router()
 
-router.get('/', async (req, res) => {
+router.get('/', auth, roles('admin'), async (req, res) => {
     try {
         res.setHeader('Content-Type', 'application/zip')
         res.setHeader('Content-Disposition', 'attachment; filename=backup.zip')
@@ -19,7 +22,6 @@ router.get('/', async (req, res) => {
 
         archive.pipe(res)
 
-        // ✅ Фетчимо всі дані — БЕЗ await archive.finalize() до завершення додавання
         const [users, products, orders] = await Promise.all([
             User.find().lean(),
             Product.find().lean(),
