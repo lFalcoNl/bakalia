@@ -83,7 +83,7 @@ export default function CollapsibleText({
             {showModal && rect &&
                 ReactDOM.createPortal(
                     <div
-                        className="absolute bg-white shadow-xl z-50 max-h-[80vh] overflow-auto border rounded-lg p-4"
+                        className="absolute bg-white shadow-xl z-40 max-h-[80vh] overflow-auto border rounded-lg p-4"
                         style={{
                             top: rect.top + window.scrollY,
                             left: rect.left + window.scrollX,
