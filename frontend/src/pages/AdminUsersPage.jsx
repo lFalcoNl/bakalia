@@ -5,6 +5,7 @@ import api from '../api/api'
 import { useNotification } from '../context/NotificationContext'
 import dayjs from 'dayjs'
 import { FiRefreshCw, FiCheck, FiTrash2, FiX } from 'react-icons/fi'
+import { useConfirm } from '../hooks/useConfirm'
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([])
@@ -13,6 +14,7 @@ export default function AdminUsersPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortConfig, setSortConfig] = useState({ key: 'role', direction: 'ascending' })
   const { addNotification } = useNotification()
+  const [confirm, ConfirmUI] = useConfirm()
 
   const fetchUsers = async () => {
     setRefreshing(true)
@@ -93,7 +95,10 @@ export default function AdminUsersPage() {
       addNotification('Неможливо видалити адміністратора')
       return
     }
-    if (!window.confirm('Видалити користувача?')) return
+
+    const confirmed = await confirm('Видалити користувача?', 'Підтвердження')
+    if (!confirmed) return
+
     try {
       await api.delete(`/users/${id}`)
       setUsers(us => us.filter(u => u._id !== id))
@@ -336,6 +341,7 @@ export default function AdminUsersPage() {
 
         </>
       )}
+      {ConfirmUI}
     </div>
   )
 }

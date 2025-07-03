@@ -12,6 +12,7 @@ import {
   FiEdit2,
   FiTrash2,
 } from 'react-icons/fi'
+import { useConfirm } from '../hooks/useConfirm'
 
 export default function AdminProductsPage() {
   const { addNotification } = useNotification()
@@ -37,6 +38,9 @@ export default function AdminProductsPage() {
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [editFile, setEditFile] = useState(null)
+
+  // ConfirmModal
+  const [confirm, ConfirmUI] = useConfirm()
 
   // Load products
   useEffect(() => {
@@ -82,7 +86,8 @@ export default function AdminProductsPage() {
 
   // Delete a product
   const deleteProduct = async id => {
-    if (!window.confirm('Видалити товар?')) return
+    const confirmed = await confirm('Видалити товар?', 'Підтвердження')
+    if (!confirmed) return
     try {
       await api.delete(`/products/${id}`)
       setProducts(products.filter(p => p._id !== id))
@@ -442,6 +447,7 @@ export default function AdminProductsPage() {
           </table>
         </div>
       )}
+      {ConfirmUI}
     </div>
   )
 }

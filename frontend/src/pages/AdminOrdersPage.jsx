@@ -17,6 +17,7 @@ import {
   FiRefreshCw,
   FiTrash2,
 } from 'react-icons/fi'
+import { useConfirm } from '../hooks/useConfirm'
 
 export default function AdminOrdersPage() {
   const { user } = useContext(AuthContext)
@@ -27,7 +28,8 @@ export default function AdminOrdersPage() {
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' })
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedOrders, setExpandedOrders] = useState({})
-
+ // ConfirmModal
+  const [confirm, ConfirmUI] = useConfirm()
   const toggleExpand = id =>
     setExpandedOrders(prev => ({ ...prev, [id]: !prev[id] }))
   const isExpanded = id => !!expandedOrders[id]
@@ -88,7 +90,8 @@ export default function AdminOrdersPage() {
   }
 
   const deleteOrder = async id => {
-    if (!window.confirm('Видалити замовлення?')) return
+    const confirmed = await confirm('Видалити замовлення?', 'Підтвердження')
+    if (!confirmed) return
     try {
       await api.delete(`/orders/${id}`)
       setOrders(prev => prev.filter(o => o._id !== id))
@@ -99,7 +102,8 @@ export default function AdminOrdersPage() {
   }
 
   const removeItem = async (orderId, productId) => {
-    if (!window.confirm('Видалити цей товар з замовлення?')) return
+    const confirmed = await confirm('Видалити цей товар з замовлення?', 'Підтвердження')
+    if (!confirmed) return
     try {
       const { data } = await api.delete(`/orders/${orderId}/products/${productId}`)
       setOrders(prev => prev.map(o => (o._id === orderId ? data : o)))
@@ -469,6 +473,7 @@ export default function AdminOrdersPage() {
           </motion.div>
         </>
       )}
+      {ConfirmUI}
     </div>
   )
 }
