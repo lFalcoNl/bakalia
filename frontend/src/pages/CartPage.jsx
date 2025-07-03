@@ -8,6 +8,7 @@ import api from '../api/api'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { FiTrash2 } from 'react-icons/fi'
+import { useConfirm } from '../hooks/useConfirm.jsx'
 
 export default function CartPage() {
   const { cart, updateItem, removeItem, clearCart, totalPrice } = useCart()
@@ -25,6 +26,7 @@ export default function CartPage() {
   const statusLabels = { new: 'Нове', processing: 'В обробці', done: 'Виконано' }
   const listVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }
   const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }
+  const [confirm, ConfirmUI] = useConfirm()
 
   // Initialize qtyInputs when cart changes
   useEffect(() => {
@@ -125,8 +127,9 @@ export default function CartPage() {
     setQtyInputs(prev => ({ ...prev, [productId]: next }))
   }
 
-  const clearAll = () => {
-    if (window.confirm('Очистити корзину?')) clearCart()
+  const clearAll = async () => {
+    const confirmed = await confirm('Очистити корзину?', 'Підтвердження')
+    if (confirmed) clearCart()
   }
 
   return (
@@ -245,8 +248,9 @@ export default function CartPage() {
                       <td className="p-3 text-center font-medium">{line} ₴</td>
                       <td className="p-3 text-center">
                         <button
-                          onClick={() => {
-                            if (window.confirm('Видалити товар з корзини?')) removeItem(id)
+                          onClick={async () => {
+                            const ok = await confirm('Видалити товар з корзини?', 'Підтвердження')
+                            if (ok) removeItem(id)
                           }}
                           className="text-red-600 hover:text-red-700 text-xl p-1 rounded-full transition-colors"
                           aria-label="Видалити товар"
@@ -274,7 +278,10 @@ export default function CartPage() {
                   <div className="flex items-center justify-between">
                     <h2 className="text-base font-semibold flex-1 min-w-0 break-words">{product.name}</h2>
                     <button
-                      onClick={() => { if (window.confirm('Видалити товар з корзини?')) removeItem(id) }}
+                      onClick={async () => {
+                        const confirmed = await confirm('Видалити товар з корзини?', 'Підтвердження')
+                        if (confirmed) removeItem(id)
+                      }}
                       className="text-red-600 text-2xl font-bold p-1 hover:text-red-800" aria-label="Видалити"
                     >
                       <FiTrash2 className="w-4 h-5" />
@@ -422,6 +429,7 @@ export default function CartPage() {
           </div>
         )}
       </div>
+      {ConfirmUI}
     </div>
   )
 }
