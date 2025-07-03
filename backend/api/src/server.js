@@ -48,6 +48,7 @@ app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ limit: '20mb', extended: true }));
 connectDB();
 
+
 // Health‐check
 app.get('/', (_req, res) => res.send('works'))
 app.get('/api', (_req, res) => res.send('API listening'))
@@ -56,7 +57,8 @@ app.use('/api/auth', require('./routes/auth'))
 app.use('/api/products', require('./routes/products'))
 app.use('/api/orders', require('./routes/orders'))
 app.use('/api/users', require('./routes/users'))
-
+//create backup
+app.use('/api/backup', require('./routes/backup'))
 
 // Error handler
 app.use((err, _req, res, _next) => {

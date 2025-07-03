@@ -9,6 +9,7 @@
     "build": "echo 'No build needed for pure Node.js backend'"
   },
   "dependencies": {
+    "archiver": "^7.0.1",
     "bcryptjs": "^2.4.3",
     "busboy": "^1.6.0",
     "cloudinary": "^2.6.1",

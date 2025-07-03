@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import api from '../api/api'
 import { useNotification } from '../context/NotificationContext'
 import dayjs from 'dayjs'
-import { FiRefreshCw, FiCheck, FiTrash2, FiX } from 'react-icons/fi'
+import { FiRefreshCw, FiCheck, FiTrash2, FiX, FiDownload } from 'react-icons/fi'
 import { useConfirm } from '../hooks/useConfirm'
 
 export default function AdminUsersPage() {
@@ -126,23 +126,62 @@ export default function AdminUsersPage() {
       addNotification('Не вдалося відхилити скидання пароля')
     }
   }
+  const handleDownloadBackup = async () => {
+    try {
+      const response = await api.get('/backup', {
+        responseType: 'blob',
+      })
+
+      const blob = response.data
+
+      // Формуємо назву файлу: backup-03-07-2025_14-32.zip
+      const now = new Date()
+      const day = String(now.getDate()).padStart(2, '0')
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const year = now.getFullYear()
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+
+      const fileName = `backup-${day}-${month}-${year}_${hours}-${minutes}.zip`
+
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Помилка завантаження резервної копії:', err)
+      addNotification('Помилка завантаження резервної копії')
+    }
+  }
 
   return (
     <div className="p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">Користувач</h1>
-        <button
-          onClick={fetchUsers}
-          disabled={refreshing}
-          aria-label="Оновити"
-          className="p-2 rounded text-gray-600 hover:text-gray-800 focus:outline-none"
-        >
-          <FiRefreshCw
-            size={20}
-            className={`${(loading || refreshing) ? 'animate-spin' : ''} text-green-500`}
-          />
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleDownloadBackup}
+            className="p-2 rounded text-blue-600 hover:text-blue-800 focus:outline-none"
+          >
+            <FiDownload size={20} />
+          </button>
+          <button
+            onClick={fetchUsers}
+            disabled={refreshing}
+            aria-label="Оновити"
+            className="p-2 rounded text-gray-600 hover:text-gray-800 focus:outline-none"
+          >
+            <FiRefreshCw
+              size={20}
+              className={`${(loading || refreshing) ? 'animate-spin' : ''} text-green-500`}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -273,71 +312,71 @@ export default function AdminUsersPage() {
           </div>
 
           {/* Mobile Cards */}
-            <div className="md:hidden space-y-3">
-              {sortedUsers.map(u => {
-                const days = computeDays(u)
-                return (
-                  <div
-                    key={u._id}
-                    className="bg-white p-3 rounded shadow flex flex-col space-y-2"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start sm:gap-3 space-y-2 sm:space-y-0">
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{u.surname}</p>
-                        <p className="text-sm text-gray-800">{u.phone}</p>
-                        <p className="text-xs text-gray-600 truncate">{u.street}</p>
-                      </div>
+          <div className="md:hidden space-y-3">
+            {sortedUsers.map(u => {
+              const days = computeDays(u)
+              return (
+                <div
+                  key={u._id}
+                  className="bg-white p-3 rounded shadow flex flex-col space-y-2"
+                >
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start sm:gap-3 space-y-2 sm:space-y-0">
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{u.surname}</p>
+                      <p className="text-sm text-gray-800">{u.phone}</p>
+                      <p className="text-xs text-gray-600 truncate">{u.street}</p>
+                    </div>
 
-                      {/* Buttons */}
-                      <div className="flex flex-wrap justify-end gap-2">
-                        {u.resetRequested && (
-                          <>
-                            <button
-                              onClick={() => approveReset(u._id)}
-                              className="w-8 h-8 flex items-center justify-center rounded text-blue-500 hover:text-blue-700"
-                              title="Підтвердити скидання"
-                            >
-                              <FiCheck className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => rejectReset(u._id)}
-                              className="w-8 h-8 flex items-center justify-center rounded text-yellow-500 hover:text-yellow-700"
-                              title="Відхилити скидання"
-                            >
-                              <FiX className="w-4 h-4" />
-                            </button>
-                          </>
-                        )}
-                        {!u.isApproved && (
+                    {/* Buttons */}
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {u.resetRequested && (
+                        <>
                           <button
-                            onClick={() => approveUser(u._id)}
-                            className="w-8 h-8 flex items-center justify-center rounded text-green-500 hover:text-green-700"
-                            title="Підтвердити"
+                            onClick={() => approveReset(u._id)}
+                            className="w-8 h-8 flex items-center justify-center rounded text-blue-500 hover:text-blue-700"
+                            title="Підтвердити скидання"
                           >
                             <FiCheck className="w-4 h-4" />
                           </button>
-                        )}
-                        {u.role !== 'admin' && (
                           <button
-                            onClick={() => deleteUser(u._id, u.role)}
-                            className="w-8 h-8 flex items-center justify-center rounded text-red-500 hover:text-red-700"
-                            title="Видалити"
+                            onClick={() => rejectReset(u._id)}
+                            className="w-8 h-8 flex items-center justify-center rounded text-yellow-500 hover:text-yellow-700"
+                            title="Відхилити скидання"
                           >
-                            <FiTrash2 className="w-4 h-4" />
+                            <FiX className="w-4 h-4" />
                           </button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between text-xs text-gray-700">
-                      <span>{u.role}</span>
-                      <span>{days === Infinity ? '∞ дн.' : `${days} дн.`}</span>
+                        </>
+                      )}
+                      {!u.isApproved && (
+                        <button
+                          onClick={() => approveUser(u._id)}
+                          className="w-8 h-8 flex items-center justify-center rounded text-green-500 hover:text-green-700"
+                          title="Підтвердити"
+                        >
+                          <FiCheck className="w-4 h-4" />
+                        </button>
+                      )}
+                      {u.role !== 'admin' && (
+                        <button
+                          onClick={() => deleteUser(u._id, u.role)}
+                          className="w-8 h-8 flex items-center justify-center rounded text-red-500 hover:text-red-700"
+                          title="Видалити"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
-                )
-              })}
-            </div>
+
+                  <div className="flex justify-between text-xs text-gray-700">
+                    <span>{u.role}</span>
+                    <span>{days === Infinity ? '∞ дн.' : `${days} дн.`}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
 
         </>
       )}
