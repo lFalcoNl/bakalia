@@ -249,8 +249,8 @@ export default function CartPage() {
                       <td className="p-3 text-center">
                         <button
                           onClick={async () => {
-                            const ok = await confirm('Видалити товар з корзини?', 'Підтвердження')
-                            if (ok) removeItem(id)
+                            const confirmed = await confirm('Видалити товар з корзини?', 'Підтвердження')
+                            if (confirmed) removeItem(id)
                           }}
                           className="text-red-600 hover:text-red-700 text-xl p-1 rounded-full transition-colors"
                           aria-label="Видалити товар"
