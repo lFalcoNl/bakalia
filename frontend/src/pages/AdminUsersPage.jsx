@@ -279,9 +279,8 @@ export default function AdminUsersPage() {
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start sm:gap-3 space-y-2 sm:space-y-0">
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {u.surname} · {u.phone}
-                        </p>
+                        <p className="font-medium text-sm truncate">{u.surname}</p>
+                        <p className="text-sm text-gray-800">{u.phone}</p>
                         <p className="text-xs text-gray-600 truncate">{u.street}</p>
                       </div>
 

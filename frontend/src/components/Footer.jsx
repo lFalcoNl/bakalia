@@ -46,7 +46,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="text-xs text-center bg-primary text-accent py-2">
+        <div className="text-xs text-center text-accent py-2">
           © {new Date().getFullYear()} Бакалійний Двір
         </div>
       </motion.footer>
