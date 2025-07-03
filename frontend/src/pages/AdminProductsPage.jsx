@@ -345,15 +345,19 @@ export default function AdminProductsPage() {
                         />
                       )}
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 align-top max-w-[120px] sm:max-w-[200px] md:max-w-[280px] lg:max-w-[320px] xl:max-w-[380px]">
                       {isEditing ? (
                         <input
                           name="name"
                           value={editForm.name}
                           onChange={handleEditChange}
-                          className="w-full border p-1 rounded focus:outline-none"
+                          className="w-full border p-1 rounded focus:outline-none text-sm"
                         />
-                      ) : p.name}
+                      ) : (
+                        <span className="block text-sm break-words whitespace-pre-wrap overflow-hidden">
+                          {p.name}
+                        </span>
+                      )}
                     </td>
                     <td className="p-2">
                       {isEditing ? (
