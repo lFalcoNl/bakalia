@@ -28,7 +28,7 @@ export default function AdminOrdersPage() {
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' })
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedOrders, setExpandedOrders] = useState({})
- // ConfirmModal
+  // ConfirmModal
   const [confirm, ConfirmUI] = useConfirm()
   const toggleExpand = id =>
     setExpandedOrders(prev => ({ ...prev, [id]: !prev[id] }))
@@ -280,7 +280,12 @@ export default function AdminOrdersPage() {
                         <div className="flex flex-col">
                           <span className="font-medium">{o.userName}</span>
                           <span className="text-sm text-gray-600">
-                            {o.userPhone}
+                            <a
+                              href={`tel:${o.userPhone.replace(/[^\d+]/g, '')}`}
+                              className="text-sm underline hover:text-blue-800"
+                            >
+                              {o.userPhone}
+                            </a>
                           </span>
                           <span className="text-sm text-gray-600">
                             {o.userStreet}
@@ -389,7 +394,14 @@ export default function AdminOrdersPage() {
                       </p>
                       <div className="mt-1">
                         <p className="font-medium">{o.userName}</p>
-                        <p className="text-sm text-gray-600">{o.userPhone}</p>
+                        <p className="text-sm text-gray-600">
+                          <a
+                            href={`tel:${o.userPhone.replace(/[^\d+]/g, '')}`}
+                            className="text-sm underline hover:text-blue-800"
+                          >
+                            {o.userPhone}
+                          </a>
+                        </p>
                         <p className="text-sm text-gray-600">{o.userStreet}</p>
                       </div>
                       <p className="mt-2 text-sm">

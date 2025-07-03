@@ -255,7 +255,14 @@ export default function AdminUsersPage() {
                   return (
                     <tr key={u._id} className="border-t hover:bg-gray-50">
                       <td className="px-4 py-2">{u.surname}</td>
-                      <td className="px-4 py-2">{u.phone}</td>
+                      <td className="px-4 py-2">
+                        <a
+                          href={`tel:${u.phone.replace(/[^\d+]/g, '')}`}
+                          className="text-sm underline hover:text-blue-800"
+                        >
+                          {u.phone}
+                        </a>
+                      </td>
                       <td className="px-4 py-2">{u.street}</td>
                       <td className="px-4 py-2">{u.role}</td>
                       <td className="px-4 py-2 text-center">
@@ -324,7 +331,12 @@ export default function AdminUsersPage() {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{u.surname}</p>
-                      <p className="text-sm text-gray-800">{u.phone}</p>
+                      <a
+                        href={`tel:${u.phone.replace(/[^\d+]/g, '')}`}
+                        className="text-sm underline hover:text-blue-800"
+                      >
+                        {u.phone}
+                      </a>
                       <p className="text-xs text-gray-600 truncate">{u.street}</p>
                     </div>
 
