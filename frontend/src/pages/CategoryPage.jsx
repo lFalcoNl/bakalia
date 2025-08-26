@@ -16,7 +16,7 @@ export default function CategoryPage() {
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
-    const [sort, setSort] = useState('')
+    const [sort, setSort] = useState('date_new')
 
     const currentCategory = categories.find(c => c.slug === slug)
     if (!currentCategory) {
@@ -62,12 +62,12 @@ export default function CategoryPage() {
             break
         case 'date_new':
             sorted.sort(
-                (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
             )
             break
         case 'date_old':
             sorted.sort(
-                (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+                (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt)
             )
             break
         case 'alpha_asc':
