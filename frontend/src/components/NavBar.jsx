@@ -73,7 +73,7 @@ export default function NavBar() {
             className="flex items-center space-x-2 flex-shrink-0"
           >
             <img
-              src="/images/logo/noSignLogo.png"
+              src="/images/logo/mainLogo.png"
               alt="Logo"
               loading='lazy'
               className="h-8 md:h-10 rounded"
