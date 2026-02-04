@@ -93,7 +93,15 @@ export default function ProductCard({ product }) {
         {/* Ціна + контролери */}
         <div className="mt-auto px-4 pb-4 flex flex-col space-y-2">
           <p className="text-green-600 font-bold text-lg text-right">
-            {product.price} ₴
+            {product.price === 0 ? (
+              <span className="text-sm text-red-600 font-medium">
+                немає в наявності
+              </span>
+            ) : (
+              <span className="text-lg font-semibold">
+                {product.price} ₴
+              </span>
+            )}
           </p>
 
           <div className="flex items-center justify-between">

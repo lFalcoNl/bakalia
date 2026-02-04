@@ -53,32 +53,35 @@ export default function CategoryPage() {
 
     // sort
     const sorted = [...filtered]
-    switch (sort) {
-        case 'price_asc':
-            sorted.sort((a, b) => a.price - b.price)
-            break
-        case 'price_desc':
-            sorted.sort((a, b) => b.price - a.price)
-            break
-        case 'date_new':
-            sorted.sort(
-                (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-            )
-            break
-        case 'date_old':
-            sorted.sort(
-                (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt)
-            )
-            break
-        case 'alpha_asc':
-            sorted.sort((a, b) => a.name.localeCompare(b.name))
-            break
-        case 'alpha_desc':
-            sorted.sort((a, b) => b.name.localeCompare(a.name))
-            break
-        default:
-            break
-    }
+
+    sorted.sort((a, b) => {
+        const aNA = a.price === 0
+        const bNA = b.price === 0
+
+        // push "not available" to the end
+        if (aNA && !bNA) return 1
+        if (!aNA && bNA) return -1
+        if (aNA && bNA) return 0
+
+        // normal sorting for available products
+        switch (sort) {
+            case 'price_asc':
+                return a.price - b.price
+            case 'price_desc':
+                return b.price - a.price
+            case 'date_new':
+                return new Date(b.updatedAt) - new Date(a.updatedAt)
+            case 'date_old':
+                return new Date(a.updatedAt) - new Date(b.updatedAt)
+            case 'alpha_asc':
+                return a.name.localeCompare(b.name)
+            case 'alpha_desc':
+                return b.name.localeCompare(a.name)
+            default:
+                return 0
+        }
+    })
+
 
     const containerVariants = {
         hidden: {},

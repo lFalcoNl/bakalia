@@ -53,7 +53,7 @@ export default function RegisterPage() {
     }
     const street = `${settlementType}${settlementName}, ${streetType} ${streetName}`
     try {
-      const { data } = await register({surname, street, phone, password})
+      const { data } = await register({ surname, street, phone, password })
       addNotification(data.msg || 'Реєстрація пройшла успішно')
       navigate('/login', { replace: true })
     } catch (err) {
@@ -80,30 +80,32 @@ export default function RegisterPage() {
             required
           />
 
-          <div className="flex space-x-2">
+          <div className="flex items-center gap-2 w-full">
             <select
               value={settlementType}
               onChange={e => setSettlementType(e.target.value)}
-              className="border p-2 rounded w-24"
+              className="border p-2.5 rounded text-sm leading-normal w-20 flex-shrink-0"
             >
               <option value="м.">місто</option>
               <option value="с.">село</option>
             </select>
+
             <input
               type="text"
               placeholder="Населений пункт"
               value={settlementName}
               onChange={e => setSettlementName(e.target.value)}
-              className="border p-2 rounded flex-1"
+              className="border p-2.5 rounded text-sm leading-normal flex-1 min-w-0"
               required
             />
           </div>
 
-          <div className="flex space-x-2">
+
+          <div className="flex items-center gap-2 w-full">
             <select
               value={streetType}
               onChange={e => setStreetType(e.target.value)}
-              className="border p-2 rounded w-24"
+              className="border p-2.5 rounded text-sm leading-normal w-20 flex-shrink-0"
             >
               <option value="вул.">вул.</option>
               <option value="просп.">просп.</option>
@@ -111,15 +113,17 @@ export default function RegisterPage() {
               <option value="бульв.">бульв.</option>
               <option value="пл.">пл.</option>
             </select>
+
             <input
               type="text"
               placeholder="Назва вулиці"
               value={streetName}
               onChange={e => setStreetName(e.target.value)}
-              className="border p-2 rounded flex-1"
+              className="border p-2.5 rounded text-sm leading-normal flex-1 min-w-0"
               required
             />
           </div>
+
 
           <input
             type="tel"
