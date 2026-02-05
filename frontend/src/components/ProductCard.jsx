@@ -112,17 +112,16 @@ export default function ProductCard({ product }) {
             lessLabel="згорнути"
           />
         </div>
-
-        {/* PRICE BLOCK — FIXED HEIGHT */}
+        {/* PRICE BLOCK — FIXED HEIGHT, PERFECT ALIGNMENT */}
         <div className="px-4 py-3">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-end justify-between gap-3 min-h-[52px]">
 
-            {/* LEFT: bulk info */}
-            <div className="flex flex-col gap-1 min-h-[44px] justify-end">
+            {/* LEFT: wholesale badge */}
+            <div className="flex flex-col justify-end">
               {hasBulkPrice ? (
                 <span
                   className={`
-            inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+            inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
             ${isBulkActive
                       ? 'bg-green-100 text-green-700'
                       : 'bg-gray-100 text-gray-600'}
@@ -133,13 +132,12 @@ export default function ProductCard({ product }) {
                     : `Опт від ${product.wholesaleMinQty} шт`}
                 </span>
               ) : (
-                // reserve space so height never jumps
-                <span className="invisible px-3 py-1 text-xs">placeholder</span>
+                <span className="invisible px-3 py-1 text-sm">placeholder</span>
               )}
             </div>
 
             {/* RIGHT: prices */}
-            <div className="flex flex-col items-end text-right min-w-[72px]">
+            <div className="flex flex-col justify-end items-end text-right leading-tight">
               <span
                 className={`text-sm line-through ${isBulkActive ? 'text-gray-400' : 'invisible'
                   }`}
@@ -147,13 +145,14 @@ export default function ProductCard({ product }) {
                 {product.price} ₴
               </span>
 
-              <span className="text-xl font-semibold text-green-600 leading-tight">
+              <span className="text-xl font-semibold text-green-600">
                 {displayPrice} ₴
               </span>
             </div>
 
           </div>
         </div>
+
 
 
         {/* CONTROLS — CLEAN */}
