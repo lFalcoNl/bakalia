@@ -544,7 +544,7 @@ export default function AdminProductsPage() {
                             value={editForm.wholesalePrice || ''}
                             onChange={handleEditChange}
                             placeholder="опт ціна"
-                            className="w-20 border p-1 rounded text-center text-xs focus:outline-none"
+                            className="w-20 border p-1 rounded text-right focus:outline-none"
                           />
                         </div>
                       ) : (
