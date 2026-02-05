@@ -541,6 +541,7 @@ export default function AdminProductsPage() {
                           <input
                             name="wholesalePrice"
                             type="number"
+                            min="1"
                             value={editForm.wholesalePrice || ''}
                             onChange={handleEditChange}
                             placeholder="опт ціна"
