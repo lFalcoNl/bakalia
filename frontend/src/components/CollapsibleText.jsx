@@ -7,7 +7,7 @@ export default function CollapsibleText({
     moreLabel = '…докладніше',
     lessLabel = 'згорнути',
     lineHeight = 24,
-    maxLines = 3
+    maxLines = 2
 }) {
     const [showModal, setShowModal] = useState(false)
     const [shouldCollapse, setShouldCollapse] = useState(false)

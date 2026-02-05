@@ -3,7 +3,6 @@ import { AuthContext } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { useNotification } from '../context/NotificationContext'
 import CollapsibleText from './CollapsibleText'
-// Імпортуємо іконки з react-icons/fi
 import { FiShoppingCart, FiRotateCw } from 'react-icons/fi'
 
 export default function ProductCard({ product }) {
@@ -17,39 +16,55 @@ export default function ProductCard({ product }) {
   const initialQty = existing ? existing.quantity : minOrder
 
   const [quantity, setQuantity] = useState(initialQty)
-  const [showModal, setShowModal] = useState(false)
   const [showZoomOverlay, setShowZoomOverlay] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
 
+  // ---------- BULK LOGIC (UNCHANGED) ----------
+  const hasBulkPrice =
+    typeof product.wholesalePrice === 'number' &&
+    typeof product.wholesaleMinQty === 'number'
+
+  const safeQty = quantity === '' ? 0 : quantity
+
+  const isBulkActive =
+    hasBulkPrice && safeQty >= product.wholesaleMinQty
+
+  const remainingToBulk = hasBulkPrice
+    ? Math.max(product.wholesaleMinQty - safeQty, 0)
+    : 0
+
+  const displayPrice = isBulkActive
+    ? product.wholesalePrice
+    : product.price
+
+  // ---------- SYNC ----------
   useEffect(() => {
-    const initialQuantity = existing?.quantity ?? minOrder
-    setQuantity(initialQuantity)
+    setQuantity(existing?.quantity ?? minOrder)
   }, [existing?.quantity, minOrder])
 
   const changeQty = delta =>
-    setQuantity(prev => Math.max(minOrder, prev + delta))
+    setQuantity(prev => Math.max(minOrder, (prev || 0) + delta))
 
   const handleAddToCart = () => {
     if (!user) {
       addNotification('Будь ласка, увійдіть для оформлення замовлення')
       return
     }
-    if (quantity < minOrder) {
+    if (safeQty < minOrder) {
       addNotification(`Мінімальна кількість — ${minOrder}`)
       return
     }
+
     if (existing) {
-      updateItem(product._id, quantity)
-      addNotification('Кількість оновлено в кошику')
+      updateItem(product._id, safeQty)
+      addNotification('Кількість оновлено')
     } else {
-      addItem(product, quantity)
+      addItem(product, safeQty)
       addNotification('Товар додано до кошика')
     }
-
-    setShowModal(true)
-    setTimeout(() => setShowModal(false), 2000)
   }
 
+  // ---------- ZOOM ----------
   const openZoom = () => {
     setShowZoomOverlay(true)
     setTimeout(() => setIsZoomed(true), 20)
@@ -61,8 +76,21 @@ export default function ProductCard({ product }) {
 
   return (
     <>
-      <div className="relative bg-white border rounded-lg overflow-hidden flex flex-col h-full w-full hover:shadow-lg transition-shadow duration-200">
-        {/* Зображення */}
+      <div
+        className={`
+          relative bg-white rounded-xl overflow-hidden flex flex-col h-full
+          border transition
+          ${existing ? 'border-green-500 ring-1 ring-green-200' : 'border-gray-200'}
+        `}
+      >
+        {/*  IN CART */}
+        {existing && (
+          <span className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-0.5 rounded">
+            В кошику
+          </span>
+        )}
+
+        {/* IMAGE */}
         <div
           className="w-full aspect-square cursor-pointer overflow-hidden"
           onClick={openZoom}
@@ -70,112 +98,160 @@ export default function ProductCard({ product }) {
           <img
             src={imgSrc}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+            className="w-full h-full object-cover hover:scale-105 transition"
           />
-          {existing && (
-            <span className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-0.5 rounded">
-              В кошику
-            </span>
-          )}
         </div>
 
-        {/* Назва */}
-        <div className="p-4 flex-shrink-0">
+        {/* TITLE */}
+        <div className="p-4">
           <CollapsibleText
             text={product.name}
             maxChars={80}
-            className="text-base sm:text-lg font-semibold text-gray-800"
+            className="text-sm sm:text-base font-medium text-gray-800"
             moreLabel="…докладніше"
             lessLabel="згорнути"
           />
         </div>
 
-        {/* Ціна + контролери */}
-        <div className="mt-auto px-4 pb-4 flex flex-col space-y-2">
-          <p className="text-green-600 font-bold text-lg text-right">
-            {product.price === 0 ? (
-              <span className="text-sm text-red-600 font-medium">
-                немає в наявності
-              </span>
-            ) : (
-              <span className="text-lg font-semibold">
-                {product.price} ₴
-              </span>
-            )}
-          </p>
+        {/* PRICE BLOCK — FIXED HEIGHT */}
+        <div className="px-4 py-3">
+          <div className="flex items-start justify-between gap-3">
 
-          <div className="flex items-center justify-between">
-            {/* Лічильник */}
-            <div className="flex-shrink-0 flex items-center border rounded-md overflow-hidden">
-              <button
-                onClick={() => changeQty(-1)}
-                className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 transition"
-              >
-                –
-              </button>
-              <input
-                type="number"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                min="0"
-                step="1"
-                value={quantity}
-                onChange={e => {
-                  const v = e.target.value
-                  if (v === '') setQuantity('')
-                  else if (/^\d+$/.test(v)) setQuantity(+v)
-                }}
-                onBlur={() => {
-                  if (quantity === '') setQuantity(minOrder)
-                }}
-                className="w-12 h-8 text-center border-x outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-              />
-              <button
-                onClick={() => changeQty(1)}
-                className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 transition"
-              >
-                +
-              </button>
+            {/* LEFT: bulk info */}
+            <div className="flex flex-col gap-1 min-h-[44px] justify-end">
+              {hasBulkPrice ? (
+                <span
+                  className={`
+            inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+            ${isBulkActive
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-600'}
+          `}
+                >
+                  {isBulkActive
+                    ? 'Оптова ціна'
+                    : `Опт від ${product.wholesaleMinQty} шт`}
+                </span>
+              ) : (
+                // reserve space so height never jumps
+                <span className="invisible px-3 py-1 text-xs">placeholder</span>
+              )}
             </div>
 
-            {/* Іконка корзини з накладеним маленьким оновленням */}
-            <button
-              onClick={handleAddToCart}
-              aria-label={existing ? 'Оновити кошик' : 'Додати до кошика'}
-              className="ml-4 relative flex-shrink-0 w-10 h-10 bg-green-600 hover:bg-green-700 transition flex items-center justify-center text-white rounded-full"
-            >
-              <FiShoppingCart className="w-6 h-6" />
-              {existing && (
-                <FiRotateCw className="absolute -top-1 -right-1 w-4 h-4 p-0.5 bg-green-800 rounded-full text-white" />
-              )}
-            </button>
+            {/* RIGHT: prices */}
+            <div className="flex flex-col items-end text-right min-w-[72px]">
+              <span
+                className={`text-sm line-through ${isBulkActive ? 'text-gray-400' : 'invisible'
+                  }`}
+              >
+                {product.price} ₴
+              </span>
+
+              <span className="text-xl font-semibold text-green-600 leading-tight">
+                {displayPrice} ₴
+              </span>
+            </div>
+
           </div>
+        </div>
+
+
+        {/* CONTROLS — CLEAN */}
+        <div className="p-4 pb-4 h-[56px] flex items-center justify-between gap-3">
+          {/* Quantity */}
+          <div className="flex items-center border rounded-md h-10 overflow-hidden">
+            <button
+              onClick={() => changeQty(-1)}
+              className="w-8 h-full hover:bg-gray-100"
+            >−</button>
+            <input
+              type="number"
+              value={quantity}
+              onChange={e => {
+                const v = e.target.value
+                if (v === '') setQuantity('')
+                else if (/^\d+$/.test(v)) setQuantity(+v)
+              }}
+              onBlur={() => quantity === '' && setQuantity(minOrder)}
+              className="w-12 h-8 text-center border-x outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+            />
+            <button
+              onClick={() => changeQty(1)}
+              className="w-8 h-full hover:bg-gray-100"
+            >+</button>
+          </div>
+
+          {/* Button — WHITE, BORDER */}
+          <button
+            onClick={handleAddToCart}
+            aria-label={existing ? 'Оновити кошик' : 'Додати до кошика'}
+            className={`
+    relative
+    flex-1 h-10 min-w-[44px]
+    rounded-md
+    flex items-center justify-center gap-2
+    font-medium
+    transition
+    ${existing
+                ? `
+          bg-white
+          border border-green-600
+          text-green-600
+          hover:bg-green-50
+        `
+                : `
+          bg-green-600
+          border border-green-600
+          text-white
+          hover:bg-green-700
+        `
+              }
+  `}
+          >
+            {/* Cart icon — always visible */}
+            <FiShoppingCart className="w-5 h-5" />
+
+            {/* Text — desktop only */}
+            <span className="hidden sm:inline">
+              {/* {existing ? 'Оновити' : 'До кошика'} */}
+            </span>
+
+            {/* Refresh badge — top right, only if in cart */}
+            {existing && (
+              <span
+                className="
+        absolute -top-1 -right-1
+        w-5 h-5
+        rounded-full
+        bg-green-600
+        text-white
+        flex items-center justify-center
+        shadow
+      "
+              >
+                <FiRotateCw className="w-3 h-3" />
+              </span>
+            )}
+          </button>
+
+
+
         </div>
       </div>
 
-      {/* Zoom overlay */}
+      {/* ZOOM OVERLAY */}
       {showZoomOverlay && (
         <div
-          className={`
-            fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4
-            transition-opacity duration-300
+          className={`fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 transition
             ${isZoomed ? 'opacity-100' : 'opacity-0 pointer-events-none'}
           `}
           onClick={closeZoom}
         >
-          <div
-            className={`
-              w-full max-w-md md:max-w-3xl max-h-[80vh]
-              transform transition-transform duration-300
-              ${isZoomed ? 'scale-100' : 'scale-75'}
-            `}
-          >
-            <img
-              src={imgSrc}
-              alt={product.name}
-              className="w-full h-full object-contain rounded shadow-lg"
-            />
-          </div>
+          <img
+            src={imgSrc}
+            alt={product.name}
+            className="max-h-[80vh] object-contain rounded"
+          />
         </div>
       )}
     </>

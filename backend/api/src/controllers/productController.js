@@ -99,7 +99,15 @@ async function handleUpsert(req, res, isUpdate = false) {
       category: fields.category,
       categorySlug: toUrlSafeSlug(fields.category),
       minOrder: fields.minOrder ? Number(fields.minOrder) : 1,
+      wholesalePrice: fields.wholesalePrice
+        ? Number(fields.wholesalePrice)
+        : null,
+
+      wholesaleMinQty: fields.wholesaleMinQty
+        ? Number(fields.wholesaleMinQty)
+        : null,
     }
+
 
     if (fields.image) data.image = fields.image
 

@@ -7,24 +7,26 @@ async function snapshotProducts(items) {
   return Promise.all(
     items.map(async item => {
       const prod = await Product.findById(item.productId)
+
       if (!prod) {
-        console.warn('❗ Product not found:', item.productId)
         return {
           productId: item.productId,
           name: '[товар видалено]',
-          price: 0,
-          quantity: item.quantity
+          price: Number(item.price) || 0,
+          quantity: Number(item.quantity)
         }
       }
+
       return {
         productId: prod._id,
         name: prod.name,
-        price: prod.price,
-        quantity: item.quantity
+        price: Number(item.price ?? prod.price), // ✅ IMPORTANT
+        quantity: Number(item.quantity)
       }
     })
   )
 }
+
 
 // Снапшот юзера
 async function snapshotUser(userId) {

@@ -31,6 +31,8 @@ export default function AdminProductsPage() {
     price: '',
     category: categories[0].name,
     minOrder: 1,
+    wholesalePrice: '',
+    wholesaleMinQty: '',
   })
   const [file, setFile] = useState(null)
 
@@ -66,17 +68,49 @@ export default function AdminProductsPage() {
       setRefreshing(false)
     }
   }
+  // Avalidate wholesale
+  const validateWholesale = (price, minOrder, wholesalePrice, wholesaleMinQty) => {
+    if (wholesalePrice !== '' && Number(wholesalePrice) >= Number(price)) {
+      return 'Оптова ціна повинна бути меншою за звичайну'
+    }
+
+    if (wholesaleMinQty !== '' && Number(wholesaleMinQty) < Number(minOrder)) {
+      return 'Оптова кількість не може бути меншою за мінімальне замовлення'
+    }
+
+    return null
+  }
 
   // Add a product
   const handleAdd = async e => {
     e.preventDefault()
+
+    const error = validateWholesale(
+      form.price,
+      form.minOrder,
+      form.wholesalePrice,
+      form.wholesaleMinQty
+    )
+
+    if (error) {
+      addNotification(error)
+      return
+    }
     try {
       const body = new FormData()
       Object.entries(form).forEach(([k, v]) => body.append(k, v))
       if (file) body.append('image', file)
       const { data: newProd } = await api.post('/products', body)
       setProducts([newProd, ...products])
-      setForm({ name: '', price: '', category: categories[0].name, minOrder: 1 })
+      setForm({
+        name: '',
+        price: '',
+        category: categories[0].name,
+        minOrder: 1,
+        wholesalePrice: '',
+        wholesaleMinQty: '',
+      })
+
       setFile(null)
       addNotification('Товар додано')
     } catch {
@@ -105,7 +139,10 @@ export default function AdminProductsPage() {
       price: p.price,
       category: p.category,
       minOrder: p.minOrder,
+      wholesalePrice: p.wholesalePrice ?? '',
+      wholesaleMinQty: p.wholesaleMinQty ?? '',
     })
+
     setEditFile(null)
   }
   const cancelEdit = () => setEditingId(null)
@@ -116,6 +153,17 @@ export default function AdminProductsPage() {
 
   // Save edits
   const saveEdit = async id => {
+    const error = validateWholesale(
+      editForm.price,
+      editForm.minOrder,
+      editForm.wholesalePrice,
+      editForm.wholesaleMinQty
+    )
+
+    if (error) {
+      addNotification(error)
+      return
+    }
     try {
       const body = new FormData()
       Object.entries(editForm).forEach(([k, v]) => body.append(k, v))
@@ -211,6 +259,7 @@ export default function AdminProductsPage() {
         onSubmit={handleAdd}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
       >
+        {/* NAME */}
         <input
           name="name"
           value={form.name}
@@ -219,15 +268,8 @@ export default function AdminProductsPage() {
           className="border p-2 rounded focus:outline-none"
           required
         />
-        <input
-          name="price"
-          type="number"
-          value={form.price}
-          onChange={e => setForm({ ...form, price: e.target.value })}
-          placeholder="Ціна"
-          className="border p-2 rounded focus:outline-none"
-          required
-        />
+
+        {/* CATEGORY */}
         <select
           name="category"
           value={form.category}
@@ -235,24 +277,104 @@ export default function AdminProductsPage() {
           className="border p-2 rounded focus:outline-none"
         >
           {categories.map(c => (
-            <option key={c.name} value={c.name}>{c.name}</option>
+            <option key={c.name} value={c.name}>
+              {c.name}
+            </option>
           ))}
         </select>
+        {/* PRICE */}
+        <input
+          name="price"
+          type="number"
+          min="1"
+          value={form.price}
+          onChange={e => {
+            const v = e.target.value
+            setForm({
+              ...form,
+              price: v === '' ? '' : Math.max(1, Number(v)),
+              // keep bulk logical
+              wholesalePrice:
+                form.wholesalePrice && Number(v) && Number(form.wholesalePrice) >= Number(v)
+                  ? Number(v) - 1
+                  : form.wholesalePrice,
+            })
+          }}
+          placeholder="Ціна"
+          className="border p-2 rounded focus:outline-none"
+          required
+        />
+
+        {/* MIN ORDER */}
         <input
           name="minOrder"
           type="number"
           min="1"
           value={form.minOrder}
-          onChange={e => setForm({ ...form, minOrder: e.target.value })}
+          onChange={e => {
+            const v = Math.max(1, Number(e.target.value))
+            setForm(prev => ({
+              ...prev,
+              minOrder: v,
+              wholesaleMinQty:
+                prev.wholesaleMinQty && prev.wholesaleMinQty < v
+                  ? v
+                  : prev.wholesaleMinQty,
+            }))
+          }}
           placeholder="Мін. кількість"
           className="border p-2 rounded focus:outline-none"
           required
         />
+
+
+
+        {/* WHOLESALE PRICE */}
+        <input
+          name="wholesalePrice"
+          type="number"
+          min="1"
+          value={form.wholesalePrice}
+          onChange={e => {
+            const v = e.target.value
+            const num = v === '' ? '' : Math.max(1, Number(v))
+            setForm({
+              ...form,
+              wholesalePrice:
+                num !== '' && form.price && num >= form.price
+                  ? Number(form.price) - 1
+                  : num,
+            })
+          }}
+          placeholder="Опт. ціна (< ціни)"
+          className="border p-2 rounded focus:outline-none"
+        />
+
+        {/* WHOLESALE MIN QTY */}
+        <input
+          name="wholesaleMinQty"
+          type="number"
+          min={form.minOrder}
+          value={form.wholesaleMinQty}
+          onChange={e => {
+            const v = e.target.value
+            setForm({
+              ...form,
+              wholesaleMinQty:
+                v === '' ? '' : Math.max(form.minOrder, Number(v)),
+            })
+          }}
+          placeholder={`Опт від (≥ ${form.minOrder})`}
+          className="border p-2 rounded focus:outline-none"
+        />
+        {/* IMAGE */}
         <input
           type="file"
           onChange={e => setFile(e.target.files[0])}
           className="border p-2 rounded focus:outline-none col-span-full"
         />
+
+        {/* SUBMIT */}
         <button
           type="submit"
           className="col-span-full p-2 rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none transition"
@@ -260,6 +382,7 @@ export default function AdminProductsPage() {
           Додати товар
         </button>
       </form>
+
 
       {/* SEARCH */}
       <input
@@ -287,39 +410,54 @@ export default function AdminProductsPage() {
               <tr>
                 <th className="p-2 text-center">#</th>
                 <th className="p-2 text-center">Фото</th>
+
                 <th
                   onClick={() => requestSort('name')}
                   className="p-2 cursor-pointer select-none"
                 >
                   Назва{getSortIndicator('name')}
                 </th>
+
                 <th
                   onClick={() => requestSort('category')}
                   className="p-2 cursor-pointer select-none"
                 >
                   Категорія{getSortIndicator('category')}
                 </th>
+
                 <th
                   onClick={() => requestSort('price')}
                   className="p-2 text-right cursor-pointer select-none"
                 >
                   Ціна{getSortIndicator('price')}
                 </th>
+
                 <th
                   onClick={() => requestSort('minOrder')}
                   className="p-2 text-center cursor-pointer select-none"
                 >
                   Мін. кількість{getSortIndicator('minOrder')}
                 </th>
+
+                {/* ✅ ОПТ */}
+                <th className="p-2 text-center cursor-pointer select-none">
+                  Опт. ціна
+                </th>
+                <th className="p-2 text-center cursor-pointer select-none">
+                  Опт. мін.ксть
+                </th>
+
                 <th
                   onClick={() => requestSort('updatedAt')}
                   className="p-2 cursor-pointer select-none"
                 >
                   Оновлено{getSortIndicator('updatedAt')}
                 </th>
+
                 <th className="p-2 text-center">Дія</th>
               </tr>
             </thead>
+
             <tbody>
               {displayed.map((p, idx) => {
                 const isEditing = editingId === p._id
@@ -382,7 +520,7 @@ export default function AdminProductsPage() {
                           onChange={handleEditChange}
                           className="w-20 border p-1 rounded text-right focus:outline-none"
                         />
-                      ) : `${p.price} ₴`}
+                      ) : `${p.price} `}
                     </td>
                     <td className="p-2 text-center">
                       {isEditing ? (
@@ -395,6 +533,57 @@ export default function AdminProductsPage() {
                           className="w-16 border p-1 rounded text-center focus:outline-none"
                         />
                       ) : p.minOrder}
+                    </td>
+                    {/* ✅ ОПТ ЦІНА */}
+                    <td className="p-2 text-right">
+                      {isEditing ? (
+                        <div className="flex flex-col gap-1 items-center">
+                          <input
+                            name="wholesalePrice"
+                            type="number"
+                            value={editForm.wholesalePrice || ''}
+                            onChange={handleEditChange}
+                            placeholder="опт ціна"
+                            className="w-20 border p-1 rounded text-center text-xs focus:outline-none"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center">
+                          {p.wholesalePrice ? (
+                            <>
+                              <span>{p.wholesalePrice}</span>
+                            </>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    {/* ✅ ОПТ К.СТЬ */}
+                    <td className="p-2 text-right">
+                      {isEditing ? (
+                        <div className="flex flex-col gap-1 items-center">
+                          <input
+                            name="wholesaleMinQty"
+                            type="number"
+                            min="1"
+                            value={editForm.wholesaleMinQty || ''}
+                            onChange={handleEditChange}
+                            placeholder="опт від"
+                            className="w-16 border p-1 rounded text-center focus:outline-none"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center">
+                          {p.wholesaleMinQty ? (
+                            <>
+                              <span>{p.wholesaleMinQty}</span>
+                            </>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="p-2 text-center">
                       <div className="flex flex-col items-center">

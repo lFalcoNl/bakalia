@@ -22,12 +22,11 @@ export default function CartPage() {
   const [cartLoading, setCartLoading] = useState(true)
   const [qtyInputs, setQtyInputs] = useState({})
 
-  const round1 = n => Math.round(n * 10) / 10
+
   const statusLabels = { new: 'Нове', processing: 'В обробці', done: 'Виконано' }
   const listVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }
   const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }
   const [confirm, ConfirmUI] = useConfirm()
-
   // Initialize qtyInputs when cart changes
   useEffect(() => {
     const init = {}
@@ -38,10 +37,30 @@ export default function CartPage() {
     setQtyInputs(init)
   }, [cart])
 
+  const round1 = n => Math.round(n * 10) / 10
+
+  const getUnitPrice = (product, quantity) => {
+    if (
+      product?.wholesalePrice &&
+      product?.wholesaleMinQty &&
+      quantity >= product.wholesaleMinQty
+    ) {
+      return product.wholesalePrice
+    }
+    return product.price
+  }
+  const isWholesaleActive = (product, quantity) =>
+    product?.wholesalePrice &&
+    product?.wholesaleMinQty &&
+    quantity >= product.wholesaleMinQty
+
+
   const computeOrderTotal = order =>
     round1(
       order.products.reduce((sum, p) => {
-        const unit = p.price ?? p.productId?.price ?? 0
+        const unit =
+          p.price ??
+          getUnitPrice(p.productId ?? p, p.quantity)
         return sum + unit * p.quantity
       }, 0)
     )
@@ -95,9 +114,10 @@ export default function CartPage() {
         products: cart.map(({ product, quantity }) => ({
           productId: product._id,
           quantity,
-          price: round1(product.price)
+          price: round1(getUnitPrice(product, quantity))
         }))
       })
+
       addNotification('Замовлення успішно створено')
       clearCart()
       await fetchOrders()
@@ -131,6 +151,8 @@ export default function CartPage() {
     const confirmed = await confirm('Очистити корзину?', 'Підтвердження')
     if (confirmed) clearCart()
   }
+
+
 
   return (
     <div className="w-full max-w-[1300px] mx-auto px-4 py-6">
@@ -194,8 +216,9 @@ export default function CartPage() {
                   const product = item.product ?? item.productId
                   const id = product._id
                   const quantity = item.quantity
-                  const unit = round1(product.price)
+                  const unit = round1(getUnitPrice(product, quantity))
                   const line = round1(unit * quantity)
+
                   return (
                     <motion.tr
                       key={id}
@@ -215,7 +238,42 @@ export default function CartPage() {
                         </div>
                       </td>
 
-                      <td className="p-3 text-left">{unit} ₴</td>
+                      <td className="p-3 text-left">
+                        <div className="min-h-[56px] flex flex-col justify-center leading-tight transition-all">
+                          {isWholesaleActive(product, quantity) ? (
+                            <>
+                              <span className="line-through text-gray-400 text-sm">
+                                {product.price} ₴
+                              </span>
+                              <span className="font-semibold text-green-600">
+                                {unit} ₴
+                              </span>
+                              <span className="text-xs text-green-600">
+                                Оптова ціна
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              {/* invisible placeholder keeps height */}
+                              <span className="text-sm invisible">
+                                {product.price} ₴
+                              </span>
+
+                              <span className="font-medium">
+                                {product.price} ₴
+                              </span>
+
+                              <span className="text-xs text-gray-500">
+                                {product.wholesalePrice && product.wholesaleMinQty
+                                  ? `Опт від ${product.wholesaleMinQty} шт`
+                                  : '\u00A0'}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </td>
+
+
                       <td className="p-3 text-center">
                         <div className="inline-flex items-center space-x-1">
                           <button
@@ -271,7 +329,7 @@ export default function CartPage() {
               const product = item.product ?? item.productId
               const id = product._id
               const quantity = item.quantity
-              const unit = round1(product.price)
+              const unit = round1(getUnitPrice(product, quantity))
               const line = round1(unit * quantity)
               return (
                 <motion.div key={id} className="bg-white shadow rounded-lg p-4 flex flex-col space-y-3" variants={itemVariants}>
@@ -290,7 +348,37 @@ export default function CartPage() {
                   <div className="grid grid-cols-3 items-center gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">Ціна</span>
-                      <div className="font-medium">{unit} ₴</div>
+                      <div className="min-h-[56px] flex flex-col justify-center leading-tight transition-all">
+                        {isWholesaleActive(product, quantity) ? (
+                          <>
+                            <div className="line-through text-gray-400 text-sm">
+                              {product.price} ₴
+                            </div>
+                            <div className="font-semibold text-green-600">
+                              {unit} ₴
+                            </div>
+                            <div className="text-xs text-green-600">
+                              Оптова ціна
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-sm invisible">
+                              {product.price} ₴
+                            </div>
+                            <div className="font-medium">
+                              {product.price} ₴
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {product.wholesalePrice && product.wholesaleMinQty
+                                ? `Оптова від ${product.wholesaleMinQty}`
+                                : '\u00A0'}
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+
                     </div>
                     <div className="flex items-center justify-center space-x-1">
                       <button
@@ -301,7 +389,9 @@ export default function CartPage() {
                       <input
                         type="number"
                         min={product.minOrder || 1}
+                        max={999}
                         step="1"
+                        maxLength={3}
                         value={qtyInputs[id] ?? quantity}
                         onChange={e => {
                           const v = e.target.value.replace(/\D/g, '')
