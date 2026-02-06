@@ -378,7 +378,6 @@ export default function CartPage() {
                         )}
                       </div>
 
-
                     </div>
                     <div className="flex items-center justify-center space-x-1">
                       <button
