@@ -113,40 +113,63 @@ export default function ProductCard({ product }) {
         </div>
         {/* PRICE BLOCK — FIXED HEIGHT, PERFECT ALIGNMENT */}
         <div className="px-4 py-4 border-t border-gray-200 bg-white">
-          <div className="flex justify-between items-end gap-6 min-h-[72px]">
+          <div
+            className="
+      flex flex-col gap-3
+      sm:flex-row sm:items-end sm:justify-between
+      min-h-[72px]
+    "
+          >
 
-            {/* LEFT — reference */}
+            {/* LEFT — lower price (only if exists) */}
             {hasBulkPrice && (
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-gray-500">
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="text-xs sm:text-sm font-medium text-gray-500">
                   Нижча ціна
                 </span>
 
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-semibold text-gray-700">
+                <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                  {/* price */}
+                  <span
+                    className={`text-lg sm:text-xl font-semibold whitespace-nowrap leading-none ${isBulkActive ? 'text-green-700' : 'text-gray-700'
+                      }`}
+                  >
                     {product.wholesalePrice} ₴
                   </span>
-                  <span className="text-m text-gray-500">
+
+                  {/* condition */}
+                  <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
                     від {product.wholesaleMinQty} шт
                   </span>
                 </div>
               </div>
             )}
 
-            {/* RIGHT — current */}
-            <div className="flex flex-col items-end text-right ml-auto">
-              <span className={`text-sm font-medium ${isBulkActive ? 'text-green-600' : 'text-gray-900'
-                }`}>
+            {/* RIGHT — current price (always visible) */}
+            <div
+              className="
+        flex flex-col
+        items-start text-left
+        sm:items-end sm:text-right
+        sm:ml-auto
+      "
+            >
+              <span
+                className={`text-xs sm:text-sm font-medium ${isBulkActive ? 'text-green-600' : 'text-gray-600'
+                  }`}
+              >
                 Поточна ціна
               </span>
 
-              <span className="text-3xl font-bold text-green-700">
+              <span className="text-2xl sm:text-3xl font-bold text-green-700 whitespace-nowrap leading-none">
                 {displayPrice} ₴
               </span>
             </div>
 
           </div>
         </div>
+
+
 
 
 
