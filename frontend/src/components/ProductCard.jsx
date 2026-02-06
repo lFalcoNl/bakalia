@@ -11,7 +11,6 @@ export default function ProductCard({ product }) {
   const { cart, addItem, updateItem } = useCart()
   const { addNotification } = useNotification()
   const imgSrc = product.image || '/images/categories/nophoto.png'
-
   const existing = cart.find(item => item.product._id === product._id)
   const initialQty = existing ? existing.quantity : minOrder
 
