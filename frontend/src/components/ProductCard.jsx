@@ -155,10 +155,7 @@ export default function ProductCard({ product }) {
 
             {/* RIGHT — current price */}
             <div className="flex flex-col items-end text-right ml-auto gap-1">
-              <span
-                className="text-xs text-gray-500
-          lg:text-sm"
-              >
+              <span className="text-xs text-gray-500">
                 Поточна ціна
               </span>
 
