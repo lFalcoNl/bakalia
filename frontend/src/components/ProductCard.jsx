@@ -115,64 +115,82 @@ export default function ProductCard({ product }) {
         <div className="px-4 py-4 border-t border-gray-200 bg-white">
           <div className="flex items-end justify-between gap-4 min-h-[76px]">
 
-            {/* LEFT — lower price / placeholder */}
-            <div className="flex flex-col gap-1 min-w-[120px]">
-              {hasBulkPrice ? (
-                <>
+            {Number(displayPrice) === 0 ? (
+              /* OUT OF STOCK */
+              <div className="w-full text-center">
+                <span className="text-sm text-gray-400 font-semibold">
+                  Немає в наявності
+                </span>
+              </div>
+            ) : (
+              <>
+                {/* LEFT — lower price / placeholder */}
+                <div className="flex flex-col gap-1 min-w-[100px]">
+                  {hasBulkPrice ? (
+                    <>
+                      <span className="text-xs text-gray-500">
+                        Нижча ціна
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`font-semibold whitespace-nowrap leading-none
+                    text-lg
+                    sm:text-lg
+                    lg:text-xl
+                    ${isBulkActive ? 'text-green-700' : 'text-gray-700'}
+                  `}
+                        >
+                          {product.wholesalePrice}
+                          <span className="text-sm ml-1">₴</span>
+                        </span>
+
+                        <span className="whitespace-nowrap text-xs text-gray-500 lg:text-sm">
+                          від {product.wholesaleMinQty} шт
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs text-transparent">.</span>
+                      <span className="text-lg text-transparent">.</span>
+                    </>
+                  )}
+                </div>
+
+                {/* RIGHT — current price */}
+                <div className="flex flex-col items-end text-right ml-auto gap-1 min-w-0 max-w-[55%]">
                   <span className="text-xs text-gray-500">
-                    Нижча ціна
+                    Поточна ціна
                   </span>
 
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`font-semibold whitespace-nowrap leading-none
-                text-lg
-                sm:text-lg
-                lg:text-xl
-                ${isBulkActive ? 'text-green-700' : 'text-gray-700'}
-              `}
-                    >
-                      {product.wholesalePrice} ₴
-                    </span>
+                  <span
+                    className="
+    font-bold text-green-700 leading-none
+    whitespace-nowrap
+    overflow-hidden
+    text-ellipsis
+    text-right
 
-                    <span
-                      className="
-                whitespace-nowrap text-xs text-gray-500
-                lg:text-sm
-              "
-                    >
-                      від {product.wholesaleMinQty} шт
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <span className="text-xs text-transparent">.</span>
-                  <span className="text-lg text-transparent">.</span>
-                </>
-              )}
-            </div>
+    text-[clamp(1.3rem,5vw,2rem)]      /* phones */
+    md:text-[clamp(1.2rem,3vw,1.7rem)] /* tablets */
+    lg:text-[clamp(1.4rem,2.5vw,2rem)] /* desktop */
+  "
+                  >
+                    {displayPrice}
+                    <span className="text-sm ml-1">₴</span>
+                  </span>
 
-            {/* RIGHT — current price */}
-            <div className="flex flex-col items-end text-right ml-auto gap-1">
-              <span className="text-xs text-gray-500">
-                Поточна ціна
-              </span>
 
-              <span
-                className="
-          font-bold text-green-700 whitespace-nowrap leading-none
-          text-2xl
-          sm:text-2xl
-          lg:text-3xl
-        "
-              >
-                {displayPrice} ₴
-              </span>
-            </div>
+
+
+                </div>
+              </>
+            )}
 
           </div>
         </div>
+
 
 
 
@@ -190,7 +208,7 @@ export default function ProductCard({ product }) {
           <div className="flex items-center border rounded-md h-10 overflow-hidden">
             <button
               onClick={() => changeQty(-1)}
-              className="w-8 h-full hover:bg-gray-100"
+              className="w-8 h-full hover:bg-gray-100 shrink-0"
             >−</button>
             <input
               type="number"
@@ -205,7 +223,7 @@ export default function ProductCard({ product }) {
             />
             <button
               onClick={() => changeQty(1)}
-              className="w-8 h-full hover:bg-gray-100"
+              className="w-8 h-full hover:bg-gray-100 shrink-0"
             >+</button>
           </div>
 
@@ -263,7 +281,7 @@ export default function ProductCard({ product }) {
 
 
         </div>
-      </div>
+      </div >
 
       {/* ZOOM OVERLAY */}
       {
