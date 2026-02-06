@@ -113,61 +113,72 @@ export default function ProductCard({ product }) {
         </div>
         {/* PRICE BLOCK — FIXED HEIGHT, PERFECT ALIGNMENT */}
         <div className="px-4 py-4 border-t border-gray-200 bg-white">
-          <div
-            className="
-      flex flex-col gap-3
-      sm:flex-row sm:items-end sm:justify-between
-      min-h-[72px]
-    "
-          >
+          <div className="flex items-end justify-between gap-4 min-h-[76px]">
 
-            {/* LEFT — lower price (only if exists) */}
-            {hasBulkPrice && (
-              <div className="flex flex-col gap-1 min-w-0">
-                <span className="text-xs sm:text-sm font-medium text-gray-500">
-                  Нижча ціна
-                </span>
-
-                <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                  {/* price */}
-                  <span
-                    className={`text-lg sm:text-xl font-semibold whitespace-nowrap leading-none ${isBulkActive ? 'text-green-700' : 'text-gray-700'
-                      }`}
-                  >
-                    {product.wholesalePrice} ₴
+            {/* LEFT — lower price / placeholder */}
+            <div className="flex flex-col gap-1 min-w-[120px]">
+              {hasBulkPrice ? (
+                <>
+                  <span className="text-xs text-gray-500">
+                    Нижча ціна
                   </span>
 
-                  {/* condition */}
-                  <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
-                    від {product.wholesaleMinQty} шт
-                  </span>
-                </div>
-              </div>
-            )}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`font-semibold whitespace-nowrap leading-none
+                text-lg
+                sm:text-lg
+                lg:text-xl
+                ${isBulkActive ? 'text-green-700' : 'text-gray-700'}
+              `}
+                    >
+                      {product.wholesalePrice} ₴
+                    </span>
 
-            {/* RIGHT — current price (always visible) */}
-            <div
-              className="
-        flex flex-col
-        items-start text-left
-        sm:items-end sm:text-right
-        sm:ml-auto
-      "
-            >
+                    <span
+                      className="
+                whitespace-nowrap text-xs text-gray-500
+                lg:text-sm
+              "
+                    >
+                      від {product.wholesaleMinQty} шт
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-transparent">.</span>
+                  <span className="text-lg text-transparent">.</span>
+                </>
+              )}
+            </div>
+
+            {/* RIGHT — current price */}
+            <div className="flex flex-col items-end text-right ml-auto gap-1">
               <span
-                className={`text-xs sm:text-sm font-medium ${isBulkActive ? 'text-green-600' : 'text-gray-600'
-                  }`}
+                className="text-xs text-gray-500
+          lg:text-sm"
               >
                 Поточна ціна
               </span>
 
-              <span className="text-2xl sm:text-3xl font-bold text-green-700 whitespace-nowrap leading-none">
+              <span
+                className="
+          font-bold text-green-700 whitespace-nowrap leading-none
+          text-2xl
+          sm:text-2xl
+          lg:text-3xl
+        "
+              >
                 {displayPrice} ₴
               </span>
             </div>
 
           </div>
         </div>
+
+
+
 
 
 
@@ -207,37 +218,33 @@ export default function ProductCard({ product }) {
             aria-label={existing ? 'Оновити кошик' : 'Додати до кошика'}
             className={`
     relative
-    flex-1 h-10 min-w-[44px]
-    max-w-[114px]
+    h-10 w-full max-w-[114px]
     rounded-md
-    flex items-center justify-center gap-2
+    flex items-center justify-center
     font-medium
     transition
     ${existing
                 ? `
-          bg-white
-          border border-green-600
-          text-green-600
-          hover:bg-green-50
-        `
+        bg-white
+        border border-green-600
+        text-green-600
+        hover:bg-green-50
+      `
                 : `
-          bg-green-600
-          border border-green-600
-          text-white
-          hover:bg-green-700
-        `
+        bg-green-600
+        border border-green-600
+        text-white
+        hover:bg-green-700
+      `
               }
   `}
           >
-            {/* Cart icon — always visible */}
-            <FiShoppingCart className="w-5 h-5" />
-
-            {/* Text — desktop only */}
-            <span className="hidden sm:inline">
-              {/* {existing ? 'Оновити' : 'До кошика'} */}
+            {/* CENTERED ICON */}
+            <span className="absolute inset-0 flex items-center justify-center">
+              <FiShoppingCart className="w-5 h-5" />
             </span>
 
-            {/* Refresh badge — top right, only if in cart */}
+            {/* REFRESH BADGE — stays top-right */}
             {existing && (
               <span
                 className="
@@ -257,8 +264,9 @@ export default function ProductCard({ product }) {
 
 
 
+
         </div>
-      </div >
+      </div>
 
       {/* ZOOM OVERLAY */}
       {
