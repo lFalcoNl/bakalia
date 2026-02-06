@@ -77,7 +77,7 @@ export default function ProductCard({ product }) {
     <>
       <div
         className={`
-          relative bg-white rounded-xl overflow-hidden flex flex-col h-full
+          relative bg-white pb-2 rounded-xl overflow-hidden flex flex-col h-full
           border transition
           ${existing ? 'border-green-500 ring-1 ring-green-200' : 'border-gray-200'}
         `}
@@ -191,19 +191,8 @@ export default function ProductCard({ product }) {
           </div>
         </div>
 
-
-
-
-
-
-
-
-
-
-
-
         {/* CONTROLS — CLEAN */}
-        <div className="p-4 pb-4 h-[56px] flex items-center justify-between gap-3">
+        <div className="p-4 h-[56px] flex items-center justify-between gap-3">
           {/* Quantity */}
           <div className="flex items-center border rounded-md h-10 overflow-hidden">
             <button
@@ -281,7 +270,7 @@ export default function ProductCard({ product }) {
 
 
         </div>
-      </div >
+      </div>
 
       {/* ZOOM OVERLAY */}
       {
