@@ -118,7 +118,7 @@ export default function ProductCard({ product }) {
             {Number(displayPrice) === 0 ? (
               /* OUT OF STOCK */
               <div className="w-full text-center">
-                <span className="text-sm text-gray-400 font-semibold">
+                <span className="text-sm text-red-600 font-semibold">
                   Немає в наявності
                 </span>
               </div>
@@ -138,7 +138,7 @@ export default function ProductCard({ product }) {
                     text-lg
                     sm:text-lg
                     lg:text-xl
-                    ${isBulkActive ? 'text-green-700' : 'text-gray-700'}
+                    ${isBulkActive ? 'text-green-700' : 'text-red-600'}
                   `}
                         >
                           {product.wholesalePrice}
@@ -180,10 +180,6 @@ export default function ProductCard({ product }) {
                     {displayPrice}
                     <span className="text-sm ml-1">₴</span>
                   </span>
-
-
-
-
                 </div>
               </>
             )}
