@@ -112,45 +112,44 @@ export default function ProductCard({ product }) {
           />
         </div>
         {/* PRICE BLOCK — FIXED HEIGHT, PERFECT ALIGNMENT */}
-        <div className="px-4 py-3">
-          <div className="flex items-end justify-between gap-3 min-h-[52px]">
+        <div className="px-4 py-4 border-t border-gray-200 bg-white">
+          <div className="flex justify-between items-end gap-6 min-h-[72px]">
 
-            {/* LEFT: wholesale badge */}
-            <div className="flex flex-col justify-end">
-              {hasBulkPrice ? (
-                <span
-                  className={`
-            inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-            ${isBulkActive
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-100 text-gray-600'}
-          `}
-                >
-                  {isBulkActive
-                    ? 'Оптова ціна'
-                    : `Опт від ${product.wholesaleMinQty} шт`}
+            {/* LEFT — reference */}
+            {hasBulkPrice && (
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-500">
+                  Нижча ціна
                 </span>
-              ) : (
-                <span className="invisible px-3 py-1 text-sm">placeholder</span>
-              )}
-            </div>
 
-            {/* RIGHT: prices */}
-            <div className="flex flex-col justify-end items-end text-right leading-tight">
-              <span
-                className={`text-sm line-through ${isBulkActive ? 'text-gray-400' : 'invisible'
-                  }`}
-              >
-                {product.price} ₴
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-semibold text-gray-700">
+                    {product.wholesalePrice} ₴
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    при {product.wholesaleMinQty}+ шт
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* RIGHT — current */}
+            <div className="flex flex-col items-end text-right ml-auto">
+              <span className={`text-sm font-medium ${isBulkActive ? 'text-green-600' : 'text-gray-900'
+                }`}>
+                Поточна ціна
               </span>
 
-              <span className="text-xl font-semibold text-green-600">
+              <span className="text-3xl font-bold text-green-700">
                 {displayPrice} ₴
               </span>
             </div>
 
           </div>
         </div>
+
+
+
 
 
 
@@ -186,6 +185,7 @@ export default function ProductCard({ product }) {
             className={`
     relative
     flex-1 h-10 min-w-[44px]
+    max-w-[114px]
     rounded-md
     flex items-center justify-center gap-2
     font-medium
@@ -235,23 +235,25 @@ export default function ProductCard({ product }) {
 
 
         </div>
-      </div>
+      </div >
 
       {/* ZOOM OVERLAY */}
-      {showZoomOverlay && (
-        <div
-          className={`fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 transition
+      {
+        showZoomOverlay && (
+          <div
+            className={`fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 transition
             ${isZoomed ? 'opacity-100' : 'opacity-0 pointer-events-none'}
           `}
-          onClick={closeZoom}
-        >
-          <img
-            src={imgSrc}
-            alt={product.name}
-            className="max-h-[80vh] object-contain rounded"
-          />
-        </div>
-      )}
+            onClick={closeZoom}
+          >
+            <img
+              src={imgSrc}
+              alt={product.name}
+              className="max-h-[80vh] object-contain rounded"
+            />
+          </div>
+        )
+      }
     </>
   )
 }
