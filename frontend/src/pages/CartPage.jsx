@@ -249,7 +249,7 @@ export default function CartPage() {
                                 {unit} ₴
                               </span>
                               <span className="text-xs text-green-600">
-                                Оптова ціна
+                                Нижча ціна
                               </span>
                             </>
                           ) : (
@@ -265,7 +265,7 @@ export default function CartPage() {
 
                               <span className="text-xs text-gray-500">
                                 {product.wholesalePrice && product.wholesaleMinQty
-                                  ? `Опт від ${product.wholesaleMinQty} шт`
+                                  ? `Нижча ціна від ${product.wholesaleMinQty} шт`
                                   : '\u00A0'}
                               </span>
                             </>
@@ -358,7 +358,7 @@ export default function CartPage() {
                               {unit} ₴
                             </div>
                             <div className="text-xs text-green-600">
-                              Оптова ціна
+                              Нижча ціна
                             </div>
                           </>
                         ) : (
@@ -371,7 +371,7 @@ export default function CartPage() {
                             </div>
                             <div className="text-xs text-gray-500">
                               {product.wholesalePrice && product.wholesaleMinQty
-                                ? `Оптова від ${product.wholesaleMinQty}`
+                                ? `Нижча ціна від ${product.wholesaleMinQty}`
                                 : '\u00A0'}
                             </div>
                           </>
