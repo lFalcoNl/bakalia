@@ -126,8 +126,8 @@ export default function ProductCard({ product }) {
                   <span className="text-xl font-semibold text-gray-700">
                     {product.wholesalePrice} ₴
                   </span>
-                  <span className="text-sm text-gray-500">
-                    при {product.wholesaleMinQty}+ шт
+                  <span className="text-m text-gray-500">
+                    від {product.wholesaleMinQty} шт
                   </span>
                 </div>
               </div>
