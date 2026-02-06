@@ -183,7 +183,7 @@ export default function AdminOrdersPage() {
             onClick={toggleAllExpanded}
             className="p-2 rounded hover:bg-gray-100 flex items-center justify-center"
           >
-            {Object.values(expandedOrders).every(Boolean)
+            {Object.values(expandedOrders).some(Boolean)
               ? <FiChevronUp className="text-yellow-500" size={20} />
               : <FiChevronDown className="text-yellow-500" size={20} />}
           </button>
