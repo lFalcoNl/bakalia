@@ -27,39 +27,35 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart))
   }, [cart])
+
   /* -------------------- helpers -------------------- */
   const getUnitPrice = (product, quantity) => {
-  const qty = Number(quantity) || 0
+    if (!product) return 0
 
-  const basePrice = Number(
-    String(product?.price ?? '')
-      .replace(',', '.')
-      .replace(/[^\d.]/g, '')
-  )
+    const qty = Number(quantity) || 0
 
-  const wholesalePrice = Number(
-    String(product?.wholesalePrice ?? '')
-      .replace(',', '.')
-      .replace(/[^\d.]/g, '')
-  )
+    const basePrice = Number(product.price)
+    const wholesalePrice = Number(product.wholesalePrice)
+    const wholesaleMinQty = Number(product.wholesaleMinQty)
 
-  const wholesaleMinQty = Number(product?.wholesaleMinQty)
+    if (
+      Number.isFinite(wholesalePrice) &&
+      Number.isFinite(wholesaleMinQty) &&
+      qty >= wholesaleMinQty
+    ) {
+      return wholesalePrice
+    }
 
-  if (
-    Number.isFinite(wholesalePrice) &&
-    Number.isFinite(wholesaleMinQty) &&
-    qty >= wholesaleMinQty
-  ) {
-    return wholesalePrice
+    return Number.isFinite(basePrice) ? basePrice : 0
   }
 
-  return Number.isFinite(basePrice) ? basePrice : 0
-}
   /* -------------------- actions -------------------- */
   const addItem = (product, quantity = 1) => {
     setCart(prev => {
       const qty = Math.max(Number(quantity) || 0, product.minOrder || 1)
-      const idx = prev.findIndex(i => i.product._id === product._id)
+      const idx = prev.findIndex(
+        i => (i.product?._id ?? i.productId?._id) === product._id
+      )
 
       if (idx !== -1) {
         const updated = [...prev]
@@ -70,13 +66,7 @@ export const CartProvider = ({ children }) => {
         return updated
       }
 
-      return [
-        ...prev,
-        {
-          product,
-          quantity: qty
-        }
-      ]
+      return [...prev, { product, quantity: qty }]
     })
   }
 
@@ -85,7 +75,7 @@ export const CartProvider = ({ children }) => {
 
     setCart(prev =>
       prev.map(item =>
-        item.product._id === productId
+        (item.product?._id ?? item.productId?._id) === productId
           ? { ...item, quantity: qty }
           : item
       )
@@ -93,20 +83,30 @@ export const CartProvider = ({ children }) => {
   }
 
   const removeItem = productId => {
-    setCart(prev => prev.filter(item => item.product._id !== productId))
+    setCart(prev =>
+      prev.filter(
+        item => (item.product?._id ?? item.productId?._id) !== productId
+      )
+    )
   }
 
   const clearCart = () => setCart([])
 
   /* -------------------- total price -------------------- */
   const totalPrice = useMemo(() => {
-    return Math.round(
-      cart.reduce((sum, item) => {
-        const qty = Number(item.quantity) || 0
-        const unit = getUnitPrice(item.product, qty)
-        return sum + unit * qty
-      }, 0) * 10
-    ) / 10
+    return (
+      Math.round(
+        cart.reduce((sum, item) => {
+          const product = item.product ?? item.productId
+          if (!product) return sum
+
+          const qty = Number(item.quantity) || 0
+          const unit = getUnitPrice(product, qty)
+
+          return sum + unit * qty
+        }, 0) * 10
+      ) / 10
+    )
   }, [cart])
 
   /* -------------------- provider -------------------- */
