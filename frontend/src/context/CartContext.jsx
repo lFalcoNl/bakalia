@@ -27,26 +27,34 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart))
   }, [cart])
-
   /* -------------------- helpers -------------------- */
   const getUnitPrice = (product, quantity) => {
-    const qty = Number(quantity) || 0
+  const qty = Number(quantity) || 0
 
-    const basePrice = Number(product?.price)
-    const wholesalePrice = Number(product?.wholesalePrice)
-    const wholesaleMinQty = Number(product?.wholesaleMinQty)
+  const basePrice = Number(
+    String(product?.price ?? '')
+      .replace(',', '.')
+      .replace(/[^\d.]/g, '')
+  )
 
-    if (
-      Number.isFinite(wholesalePrice) &&
-      Number.isFinite(wholesaleMinQty) &&
-      qty >= wholesaleMinQty
-    ) {
-      return wholesalePrice
-    }
+  const wholesalePrice = Number(
+    String(product?.wholesalePrice ?? '')
+      .replace(',', '.')
+      .replace(/[^\d.]/g, '')
+  )
 
-    return Number.isFinite(basePrice) ? basePrice : 0
+  const wholesaleMinQty = Number(product?.wholesaleMinQty)
+
+  if (
+    Number.isFinite(wholesalePrice) &&
+    Number.isFinite(wholesaleMinQty) &&
+    qty >= wholesaleMinQty
+  ) {
+    return wholesalePrice
   }
 
+  return Number.isFinite(basePrice) ? basePrice : 0
+}
   /* -------------------- actions -------------------- */
   const addItem = (product, quantity = 1) => {
     setCart(prev => {
