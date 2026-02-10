@@ -1,29 +1,45 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState
+} from 'react'
 
-const CartContext = createContext();
+const CartContext = createContext()
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('cart')) || [];
+      const stored = JSON.parse(localStorage.getItem('cart'))
+      return Array.isArray(stored)
+        ? stored.map(item => ({
+            ...item,
+            quantity: Number(item.quantity) || 0
+          }))
+        : []
     } catch {
-      return [];
+      return []
     }
-  });
+  })
 
+  /* -------------------- persist cart -------------------- */
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
+    localStorage.setItem('cart', JSON.stringify(cart))
+  }, [cart])
 
+  /* -------------------- helpers -------------------- */
   const getUnitPrice = (product, quantity) => {
-    const basePrice = Number(product.price)
-    const wholesalePrice = Number(product.wholesalePrice)
-    const wholesaleMinQty = Number(product.wholesaleMinQty)
+    const qty = Number(quantity) || 0
+
+    const basePrice = Number(product?.price)
+    const wholesalePrice = Number(product?.wholesalePrice)
+    const wholesaleMinQty = Number(product?.wholesaleMinQty)
 
     if (
       Number.isFinite(wholesalePrice) &&
       Number.isFinite(wholesaleMinQty) &&
-      quantity >= wholesaleMinQty
+      qty >= wholesaleMinQty
     ) {
       return wholesalePrice
     }
@@ -31,20 +47,18 @@ export const CartProvider = ({ children }) => {
     return Number.isFinite(basePrice) ? basePrice : 0
   }
 
-
+  /* -------------------- actions -------------------- */
   const addItem = (product, quantity = 1) => {
     setCart(prev => {
-      const idx = prev.findIndex(item => item.product._id === product._id)
+      const qty = Math.max(Number(quantity) || 0, product.minOrder || 1)
+      const idx = prev.findIndex(i => i.product._id === product._id)
 
-      if (idx > -1) {
+      if (idx !== -1) {
         const updated = [...prev]
-        const nextQty = updated[idx].quantity + quantity
-
         updated[idx] = {
           ...updated[idx],
-          quantity: nextQty
+          quantity: updated[idx].quantity + qty
         }
-
         return updated
       }
 
@@ -52,41 +66,56 @@ export const CartProvider = ({ children }) => {
         ...prev,
         {
           product,
-          quantity: Math.max(quantity, product.minOrder || 1)
+          quantity: qty
         }
       ]
     })
   }
 
+  const updateItem = (productId, quantity) => {
+    const qty = Number(quantity) || 0
 
-
-  const updateItem = (productId, quantity) =>
     setCart(prev =>
       prev.map(item =>
-        item.product._id === productId ? { ...item, quantity } : item
+        item.product._id === productId
+          ? { ...item, quantity: qty }
+          : item
       )
-    );
+    )
+  }
 
-  const removeItem = productId =>
-    setCart(prev => prev.filter(item => item.product._id !== productId));
+  const removeItem = productId => {
+    setCart(prev => prev.filter(item => item.product._id !== productId))
+  }
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => setCart([])
 
-  const totalPrice = cart.reduce((sum, item) => {
-    const unit = getUnitPrice(item.product, item.quantity)
-    const qty = Number(item.quantity) || 0
-    return sum + unit * qty
-  }, 0)
+  /* -------------------- total price -------------------- */
+  const totalPrice = useMemo(() => {
+    return Math.round(
+      cart.reduce((sum, item) => {
+        const qty = Number(item.quantity) || 0
+        const unit = getUnitPrice(item.product, qty)
+        return sum + unit * qty
+      }, 0) * 10
+    ) / 10
+  }, [cart])
 
-
-
+  /* -------------------- provider -------------------- */
   return (
     <CartContext.Provider
-      value={{ cart, addItem, updateItem, removeItem, clearCart, totalPrice }}
+      value={{
+        cart,
+        addItem,
+        updateItem,
+        removeItem,
+        clearCart,
+        totalPrice
+      }}
     >
       {children}
     </CartContext.Provider>
-  );
-};
+  )
+}
 
-export const useCart = () => useContext(CartContext);
+export const useCart = () => useContext(CartContext)
