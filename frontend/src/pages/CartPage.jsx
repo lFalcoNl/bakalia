@@ -39,16 +39,32 @@ export default function CartPage() {
 
   const round1 = n => Math.round(n * 10) / 10
 
-  const getUnitPrice = (product, quantity) => {
-    if (
-      product?.wholesalePrice &&
-      product?.wholesaleMinQty &&
-      quantity >= product.wholesaleMinQty
-    ) {
-      return product.wholesalePrice
-    }
-    return product.price
+const getUnitPrice = (product, quantity) => {
+  const qty = Number(quantity) || 0
+
+  const basePrice = Number(
+    String(product?.price ?? '')
+      .replace(',', '.')
+      .replace(/[^\d.]/g, '')
+  )
+
+  const wholesalePrice = Number(
+    String(product?.wholesalePrice ?? '')
+      .replace(',', '.')
+      .replace(/[^\d.]/g, '')
+  )
+
+  const wholesaleMinQty = Number(product?.wholesaleMinQty)
+
+  if (
+    Number.isFinite(wholesalePrice) &&
+    Number.isFinite(wholesaleMinQty) &&
+    qty >= wholesaleMinQty
+  ) {
+    return wholesalePrice
   }
+  return Number.isFinite(basePrice) ? basePrice : 0
+}
   const isWholesaleActive = (product, quantity) =>
     product?.wholesalePrice &&
     product?.wholesaleMinQty &&
