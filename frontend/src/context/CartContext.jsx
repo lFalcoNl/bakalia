@@ -34,27 +34,36 @@ export const CartProvider = ({ children }) => {
 
     const qty = Number(quantity) || 0
 
-    const basePrice = Number(product.price)
-    const wholesalePrice = Number(product.wholesalePrice)
-    const wholesaleMinQty = Number(product.wholesaleMinQty)
+    const basePrice =
+      typeof product.price === 'number'
+        ? product.price
+        : Number(product.price) || 0
 
-    if (
-      Number.isFinite(wholesalePrice) &&
-      Number.isFinite(wholesaleMinQty) &&
-      qty >= wholesaleMinQty
-    ) {
+    const wholesalePrice =
+      typeof product.wholesalePrice === 'number'
+        ? product.wholesalePrice
+        : Number(product.wholesalePrice) || 0
+
+    const wholesaleMinQty =
+      typeof product.wholesaleMinQty === 'number'
+        ? product.wholesaleMinQty
+        : Number(product.wholesaleMinQty) || 0
+
+    if (wholesalePrice > 0 && wholesaleMinQty > 0 && qty >= wholesaleMinQty) {
       return wholesalePrice
     }
 
-    return Number.isFinite(basePrice) ? basePrice : 0
+    return basePrice
   }
 
   /* -------------------- actions -------------------- */
   const addItem = (product, quantity = 1) => {
     setCart(prev => {
       const qty = Math.max(Number(quantity) || 0, product.minOrder || 1)
+      const id = product._id
+
       const idx = prev.findIndex(
-        i => (i.product?._id ?? i.productId?._id) === product._id
+        i => (i.product?._id ?? i.productId?._id) === id
       )
 
       if (idx !== -1) {
