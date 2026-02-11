@@ -2,21 +2,77 @@
 const mongoose = require('mongoose')
 
 const orderSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  userName: { type: String, required: true },   // frozen surname
-  userPhone: { type: String, required: true },   // frozen phone
-  userStreet: { type: String, required: true },   // frozen street
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+
+  // frozen user data
+  userName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  userPhone: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  userStreet: {
+    type: String,
+    required: true,
+    trim: true
+  },
+
+  // frozen products
   products: [
     {
-      productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-      name: { type: String, required: true },   // frozen name
-      price: { type: Number, required: true },   // frozen price
-      quantity: { type: Number, required: true }
+      productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+        required: true
+      },
+      name: {
+        type: String,
+        required: true
+      },
+      price: {
+        type: Number,
+        required: true,
+        min: 0
+      },
+      quantity: {
+        type: Number,
+        required: true,
+        min: 1
+      }
     }
   ],
-  status: { type: String, default: 'new' },
-  createdAt: { type: Date, default: Date.now },
-  contact: { type: String, required: true }
+
+  // 🔐 ORDER TOTAL (CRITICAL)
+  total: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 0
+  },
+
+  status: {
+    type: String,
+    enum: ['new', 'processing', 'done', 'cancelled'],
+    default: 'new'
+  },
+
+  contact: {
+    type: String,
+    required: true
+  },
+
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 })
 
 module.exports = mongoose.model('Order', orderSchema)

@@ -2,43 +2,67 @@ const Order = require('../models/Order')
 const Product = require('../models/Product')
 const User = require('../models/User')
 
-// Снапшот товарів
+/* ===================== PRICING (BACKEND AUTHORITATIVE) ===================== */
+function getUnitPrice(product, quantity) {
+  const qty = Number(quantity) || 0
+
+  const price = Number(product.price) || 0
+  const wholesalePrice = Number(product.wholesalePrice) || 0
+  const minQty = Number(product.wholesaleMinQty) || 0
+
+  if (wholesalePrice > 0 && minQty > 0 && qty >= minQty) {
+    return wholesalePrice
+  }
+
+  return price
+}
+
+function calcOrderTotal(products) {
+  return products.reduce(
+    (sum, p) => sum + p.price * p.quantity,
+    0
+  )
+}
+
+/* ===================== SNAPSHOT PRODUCTS ===================== */
 async function snapshotProducts(items) {
   return Promise.all(
     items.map(async item => {
+      const qty = Number(item.quantity) || 0
       const prod = await Product.findById(item.productId)
 
       if (!prod) {
         return {
           productId: item.productId,
           name: '[товар видалено]',
-          price: Number(item.price) || 0,
-          quantity: Number(item.quantity)
+          price: 0,
+          quantity: qty
         }
       }
+
+      const unitPrice = getUnitPrice(prod, qty)
 
       return {
         productId: prod._id,
         name: prod.name,
-        price: Number(item.price ?? prod.price), // ✅ IMPORTANT
-        quantity: Number(item.quantity)
+        price: unitPrice, // 🔐 calculated on backend
+        quantity: qty
       }
     })
   )
 }
 
-
-// Снапшот юзера
+/* ===================== SNAPSHOT USER ===================== */
 async function snapshotUser(userId) {
   const u = await User.findById(userId, 'surname phone street')
   if (!u) {
-    console.warn('⚠️ User not found:', userId)
     return {
       userName: '[користувача видалено]',
       userPhone: '',
       userStreet: ''
     }
   }
+
   return {
     userName: u.surname,
     userPhone: u.phone,
@@ -46,21 +70,14 @@ async function snapshotUser(userId) {
   }
 }
 
-// GET /orders — всі замовлення
+/* ===================== GET ALL ORDERS ===================== */
 exports.getAll = async (_req, res) => {
   try {
-    const raws = await Order.find().sort({ createdAt: -1 }).lean()
+    const orders = await Order.find()
+      .sort({ createdAt: -1 })
+      .lean()
 
-    const orders = await Promise.all(
-      raws.map(async o => {
-        if (o.status === 'new') {
-          const prods = await snapshotProducts(o.products)
-          return { ...o, products: prods }
-        }
-        return o
-      })
-    )
-
+    // ❌ NO RECALCULATION — return snapshots only
     res.json(orders)
   } catch (err) {
     console.error('orderController.getAll error:', err)
@@ -68,21 +85,14 @@ exports.getAll = async (_req, res) => {
   }
 }
 
-// GET /orders/my — замовлення користувача
+/* ===================== GET MY ORDERS ===================== */
 exports.getMyOrder = async (req, res) => {
   try {
-    const raws = await Order.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean()
+    const orders = await Order.find({ userId: req.user._id })
+      .sort({ createdAt: -1 })
+      .lean()
 
-    const orders = await Promise.all(
-      raws.map(async o => {
-        if (o.status === 'new') {
-          const prods = await snapshotProducts(o.products)
-          return { ...o, products: prods }
-        }
-        return o
-      })
-    )
-
+    // ❌ NO RECALCULATION
     res.json(orders)
   } catch (err) {
     console.error('orderController.getMyOrder error:', err)
@@ -90,13 +100,25 @@ exports.getMyOrder = async (req, res) => {
   }
 }
 
-// POST /orders — створити або оновити активне замовлення
+/* ===================== CREATE ORDER ===================== */
 exports.create = async (req, res) => {
   try {
     const frozenProducts = await snapshotProducts(req.body.products)
 
+    if (!frozenProducts.length) {
+      return res.status(400).json({ msg: 'Порожнє замовлення' })
+    }
+
+    const total = calcOrderTotal(frozenProducts)
+
+    if (total < 2000) {
+      return res.status(400).json({ msg: 'Мінімальна сума замовлення — 2000 ₴' })
+    }
+
     const user = await User.findById(req.user._id, 'surname phone street')
-    if (!user) return res.status(404).json({ msg: 'Користувача не знайдено' })
+    if (!user) {
+      return res.status(404).json({ msg: 'Користувача не знайдено' })
+    }
 
     const userSnap = {
       userId: user._id,
@@ -105,12 +127,16 @@ exports.create = async (req, res) => {
       userStreet: user.street
     }
 
-    let order = await Order.findOne({ userId: user._id, status: '___' })
+    let order = await Order.findOne({
+      userId: user._id,
+      status: '___'
+    })
 
     if (!order) {
       order = new Order({
         ...userSnap,
         products: frozenProducts,
+        total,
         contact: user.phone,
         status: 'new'
       })
@@ -119,9 +145,15 @@ exports.create = async (req, res) => {
         const existing = order.products.find(p =>
           p.productId.equals(item.productId)
         )
-        if (existing) existing.quantity += item.quantity
-        else order.products.push(item)
+
+        if (existing) {
+          existing.quantity += item.quantity
+        } else {
+          order.products.push(item)
+        }
       })
+
+      order.total = calcOrderTotal(order.products)
       Object.assign(order, userSnap)
     }
 
@@ -133,24 +165,20 @@ exports.create = async (req, res) => {
   }
 }
 
-// PATCH /orders/:id — змінити статус
+/* ===================== UPDATE STATUS ===================== */
 exports.updateStatus = async (req, res) => {
   try {
     const { id } = req.params
     const { status } = req.body
 
     const order = await Order.findById(id)
-    if (!order) return res.status(404).json({ msg: 'Замовлення не знайдено' })
+    if (!order) {
+      return res.status(404).json({ msg: 'Замовлення не знайдено' })
+    }
 
-    // Дозаповнення інформації
     if (!order.userName || !order.userPhone || !order.userStreet) {
       const userSnap = await snapshotUser(order.userId)
       Object.assign(order, userSnap)
-    }
-
-    // Заморожуємо товари при переході в "processing"
-    if (status === 'processing') {
-      order.products = await snapshotProducts(order.products)
     }
 
     order.status = status
@@ -163,7 +191,7 @@ exports.updateStatus = async (req, res) => {
   }
 }
 
-// DELETE /orders/:id
+/* ===================== DELETE ORDER ===================== */
 exports.remove = async (req, res) => {
   try {
     await Order.findByIdAndDelete(req.params.id)
@@ -174,17 +202,23 @@ exports.remove = async (req, res) => {
   }
 }
 
-// DELETE /orders/:orderId/products/:productId
+/* ===================== DELETE PRODUCT FROM ORDER ===================== */
 exports.removeProduct = async (req, res) => {
   try {
     const { orderId, productId } = req.params
+
     const order = await Order.findById(orderId)
-    if (!order) return res.status(404).json({ msg: 'Замовлення не знайдено' })
+    if (!order) {
+      return res.status(404).json({ msg: 'Замовлення не знайдено' })
+    }
 
     order.products = order.products.filter(
       p => !p.productId.equals(productId)
     )
+
+    order.total = calcOrderTotal(order.products)
     await order.save()
+
     res.json(order)
   } catch (err) {
     console.error('orderController.removeProduct error:', err)

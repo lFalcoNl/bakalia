@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { FiTrash2 } from 'react-icons/fi'
 import { useConfirm } from '../hooks/useConfirm.jsx'
+import { getUnitPrice } from '../utils/pricing'
 
 export default function CartPage() {
   const { cart, updateItem, removeItem, clearCart, totalPrice } = useCart()
@@ -39,31 +40,11 @@ export default function CartPage() {
 
   const round1 = n => Math.round(n * 10) / 10
 
-const getUnitPrice = (product, quantity) => {
-  if (
-    product?.wholesalePrice &&
-    product?.wholesaleMinQty &&
-    quantity >= product.wholesaleMinQty
-  ) {
-    return product.wholesalePrice
-  }
-  return product.price
-}
   const isWholesaleActive = (product, quantity) =>
     product?.wholesalePrice &&
     product?.wholesaleMinQty &&
     quantity >= product.wholesaleMinQty
 
-
-  const computeOrderTotal = order =>
-    round1(
-      order.products.reduce((sum, p) => {
-        const unit =
-          p.price ??
-          getUnitPrice(p.productId ?? p, p.quantity)
-        return sum + unit * p.quantity
-      }, 0)
-    )
 
   const fetchOrders = useCallback(async () => {
     setOrdersLoading(true)
@@ -113,8 +94,7 @@ const getUnitPrice = (product, quantity) => {
       await api.post('/orders', {
         products: cart.map(({ product, quantity }) => ({
           productId: product._id,
-          quantity,
-          price: round1(getUnitPrice(product, quantity))
+          quantity
         }))
       })
 
@@ -470,7 +450,7 @@ const getUnitPrice = (product, quantity) => {
         ) : (
           <div className="max-h-[40rem] overflow-y-auto space-y-4">
             {orders.map(order => {
-              const total = computeOrderTotal(order)
+              const total = round1(order.total)
               const statusBorder =
                 order.status === 'new' ? 'border-yellow-500'
                   : order.status === 'processing' ? 'border-blue-500'
@@ -495,7 +475,7 @@ const getUnitPrice = (product, quantity) => {
                   <ul className="divide-y divide-gray-200">
                     {order.products.map((p, i) => {
                       const prod = p.productId ?? p
-                      const unit = round1(p.price ?? prod.price ?? 0)
+                      const unit = round1(p.price)
                       const line = round1(unit * p.quantity)
                       return (
                         <li key={i} className="flex justify-between items-start py-2">
