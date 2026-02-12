@@ -70,6 +70,9 @@ export default function AdminProductsPage() {
   }
   // Avalidate wholesale
   const validateWholesale = (price, minOrder, wholesalePrice, wholesaleMinQty) => {
+    if (Number(price) === 0) {
+      return null
+    }
     if (wholesalePrice !== '' && Number(wholesalePrice) >= Number(price)) {
       return 'Оптова ціна повинна бути меншою за звичайну'
     }
@@ -286,13 +289,13 @@ export default function AdminProductsPage() {
         <input
           name="price"
           type="number"
-          min="1"
+          min="0"
           value={form.price}
           onChange={e => {
             const v = e.target.value
             setForm({
               ...form,
-              price: v === '' ? '' : Math.max(1, Number(v)),
+              price: v === '' ? '' : Math.max(0, Number(v)),
               // keep bulk logical
               wholesalePrice:
                 form.wholesalePrice && Number(v) && Number(form.wholesalePrice) >= Number(v)
