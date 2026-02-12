@@ -188,36 +188,36 @@ export default function ProductCard({ product }) {
         </div>
 
         {/* CONTROLS — CLEAN */}
-        {Number(displayPrice) !== 0 ? (
-          <div className="p-4 h-[56px] flex items-center justify-between gap-3">
-            {/* Quantity */}
-            <div className="flex items-center border rounded-md h-10 overflow-hidden">
-              <button
-                onClick={() => changeQty(-1)}
-                className="w-8 h-full hover:bg-gray-100 shrink-0"
-              >−</button>
-              <input
-                type="number"
-                value={quantity}
-                onChange={e => {
-                  const v = e.target.value
-                  if (v === '') setQuantity('')
-                  else if (/^\d+$/.test(v)) setQuantity(+v)
-                }}
-                onBlur={() => quantity === '' && setQuantity(minOrder)}
-                className="w-12 h-8 text-center border-x outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-              />
-              <button
-                onClick={() => changeQty(1)}
-                className="w-8 h-full hover:bg-gray-100 shrink-0"
-              >+</button>
-            </div>
-
-            {/* Button — WHITE, BORDER */}
+        {/* {Number(displayPrice) !== 0 ? ( */}
+        <div className="p-4 h-[56px] flex items-center justify-between gap-3">
+          {/* Quantity */}
+          <div className="flex items-center border rounded-md h-10 overflow-hidden">
             <button
-              onClick={handleAddToCart}
-              aria-label={existing ? 'Оновити кошик' : 'Додати до кошика'}
-              className={`
+              onClick={() => changeQty(-1)}
+              className="w-8 h-full hover:bg-gray-100 shrink-0"
+            >−</button>
+            <input
+              type="number"
+              value={quantity}
+              onChange={e => {
+                const v = e.target.value
+                if (v === '') setQuantity('')
+                else if (/^\d+$/.test(v)) setQuantity(+v)
+              }}
+              onBlur={() => quantity === '' && setQuantity(minOrder)}
+              className="w-12 h-8 text-center border-x outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+            />
+            <button
+              onClick={() => changeQty(1)}
+              className="w-8 h-full hover:bg-gray-100 shrink-0"
+            >+</button>
+          </div>
+
+          {/* Button — WHITE, BORDER */}
+          <button
+            onClick={handleAddToCart}
+            aria-label={existing ? 'Оновити кошик' : 'Додати до кошика'}
+            className={`
     relative
     h-10 w-full max-w-[114px]
     rounded-md
@@ -225,30 +225,30 @@ export default function ProductCard({ product }) {
     font-medium
     transition
     ${existing
-                  ? `
+                ? `
         bg-white
         border border-green-600
         text-green-600
         hover:bg-green-50
       `
-                  : `
+                : `
         bg-green-600
         border border-green-600
         text-white
         hover:bg-green-700
       `
-                }
+              }
   `}
-            >
-              {/* CENTERED ICON */}
-              <span className="absolute inset-0 flex items-center justify-center">
-                <FiShoppingCart className="w-5 h-5" />
-              </span>
+          >
+            {/* CENTERED ICON */}
+            <span className="absolute inset-0 flex items-center justify-center">
+              <FiShoppingCart className="w-5 h-5" />
+            </span>
 
-              {/* REFRESH BADGE — stays top-right */}
-              {existing && (
-                <span
-                  className="
+            {/* REFRESH BADGE — stays top-right */}
+            {existing && (
+              <span
+                className="
         absolute -top-1 -right-1
         w-5 h-5
         rounded-full
@@ -257,16 +257,17 @@ export default function ProductCard({ product }) {
         flex items-center justify-center
         shadow
       "
-                >
-                  <FiRotateCw className="w-3 h-3" />
-                </span>
-              )}
-            </button>
+              >
+                <FiRotateCw className="w-3 h-3" />
+              </span>
+            )}
+          </button>
 
 
 
 
-          </div>) : (<div className="p-4 h-[56px] flex items-center justify-between gap-3"></div>)}
+        </div>
+        {/* ) : (<div className="p-4 h-[56px] flex items-center justify-between gap-3"></div>)} */}
       </div>
 
       {/* ZOOM OVERLAY */}
