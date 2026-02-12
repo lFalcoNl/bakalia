@@ -16,11 +16,22 @@ async function snapshotProducts(items) {
           quantity: Number(item.quantity)
         }
       }
+      
+      const qty = Number(item.quantity)
+
+      // 🔑 WHOLESALE LOGIC
+      const isWholesale =
+        prod.wholesaleMinQty &&
+        qty >= prod.wholesaleMinQty
+
+      const price = isWholesale
+        ? prod.wholesalePrice
+        : prod.price
 
       return {
         productId: prod._id,
         name: prod.name,
-        price: Number(prod.price), // ✅ IMPORTANT
+        price: Number(price), // ✅ IMPORTANT
         quantity: Number(item.quantity)
       }
     })
