@@ -20,7 +20,7 @@ async function snapshotProducts(items) {
       return {
         productId: prod._id,
         name: prod.name,
-        price: Number(item.price ?? prod.price), // ✅ IMPORTANT
+        price: Number(prod.price), // ✅ IMPORTANT
         quantity: Number(item.quantity)
       }
     })
